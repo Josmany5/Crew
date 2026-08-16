@@ -34,10 +34,15 @@ function SignIn() {
 
   const google = async () => {
     setError('');
-    await supabase.auth.signInWithOAuth({
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: { redirectTo: window.location.origin },
     });
+    setLoading(false);
+    if (error) {
+      setError(`Google sign-in isn't enabled yet. Enable it in Supabase → Authentication → Sign In / Providers → Google, then try again. (${error.message})`);
+    }
   };
 
   return (
