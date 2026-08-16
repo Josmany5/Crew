@@ -11,6 +11,7 @@ import {
   swipesTable,
 } from "@workspace/db/schema";
 import { db } from "../lib/drizzle";
+import { requireAuth, type AuthedRequest } from "../lib/auth";
 import {
   CreateCheckinBody,
   CreateCheckinResponse,
@@ -39,9 +40,8 @@ import {
 
 const router: IRouter = Router();
 
-// Until accounts land, the signed-in climber is the seeded demo user.
-// Auth (Phase 5 step 7) will replace this with the authenticated user id.
-const CURRENT_USER = "me";
+// All crew routes require a signed-in user.
+router.use(requireAuth);
 
 const image = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
@@ -54,13 +54,30 @@ async function getProfile(id: string) {
   return row ?? null;
 }
 
+/** Creates a default profile the first time a new user is seen. */
+async function ensureProfile(id: string) {
+  const existing = await getProfile(id);
+  if (existing) return existing;
+  await db().insert(profilesTable).values({
+    id,
+    name: "Climber",
+    age: 0,
+    location: "",
+    bio: "New to the crew — say hi!",
+    avatarUrl: "",
+    climbingLevel: "",
+  });
+  return getProfile(id);
+}
+
 // ---------------------------------------------------------------------------
 // discovery
 // ---------------------------------------------------------------------------
-router.get("/discover", async (req, res) => {
+router.get("/discover", async (req: AuthedRequest, res) => {
   const parsed = GetDiscoverProfilesQueryParams.parse(req.query);
   const rows = await db().select().from(profilesTable);
   const result = rows.filter((profile) => {
+    if (profile.id === req.user!.id) return false;
     const gymMatches =
       !parsed.gymId ||
       (parsed.gymId === "circuit" && profile.gyms.includes("The Circuit")) ||
@@ -74,7 +91,7 @@ router.get("/discover", async (req, res) => {
   res.json(GetDiscoverProfilesResponse.parse(result));
 });
 
-router.get("/gyms", async (_req, res) => {
+router.get("/gyms", async (_req: AuthedRequest, res) => {
   const rows = await db()
     .select()
     .from(placesTable)
@@ -85,30 +102,30 @@ router.get("/gyms", async (_req, res) => {
 // ---------------------------------------------------------------------------
 // profile
 // ---------------------------------------------------------------------------
-router.get("/profile", async (_req, res) => {
-  const profile = await getProfile(CURRENT_USER);
-  if (!profile) {
-    res.status(404).json({ error: "Profile not found" });
-    return;
-  }
+router.get("/profile", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
+  const profile = await ensureProfile(userId);
   res.json(GetMyProfileResponse.parse(profile));
 });
 
-router.patch("/profile", async (req, res) => {
+router.patch("/profile", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
+  await ensureProfile(userId);
   const input = UpdateMyProfileBody.parse(req.body);
   await db()
     .update(profilesTable)
     .set({ ...input })
-    .where(eq(profilesTable.id, CURRENT_USER));
-  const profile = await getProfile(CURRENT_USER);
+    .where(eq(profilesTable.id, userId));
+  const profile = await getProfile(userId);
   res.json(UpdateMyProfileResponse.parse(profile));
 });
 
 // ---------------------------------------------------------------------------
 // swipes + matches
 // ---------------------------------------------------------------------------
-router.post("/swipes", async (req, res) => {
+router.post("/swipes", async (req: AuthedRequest, res) => {
   const input = CreateSwipeBody.parse(req.body);
+  const userId = req.user!.id;
 
   const mutual = await db()
     .select()
@@ -116,7 +133,7 @@ router.post("/swipes", async (req, res) => {
     .where(
       and(
         eq(swipesTable.actorId, input.profileId),
-        eq(swipesTable.targetId, CURRENT_USER),
+        eq(swipesTable.targetId, userId),
         eq(swipesTable.action, "like"),
       ),
     );
@@ -125,7 +142,7 @@ router.post("/swipes", async (req, res) => {
 
   await db().insert(swipesTable).values({
     id: `swipe-${Date.now()}`,
-    actorId: CURRENT_USER,
+    actorId: userId,
     targetId: input.profileId,
     action: input.action,
   });
@@ -141,7 +158,7 @@ router.post("/swipes", async (req, res) => {
     };
     await db().insert(matchesTable).values({
       id: `match-${input.profileId}`,
-      profileA: CURRENT_USER,
+      profileA: userId,
       profileB: input.profileId,
       matchedAt: "Just now",
       unreadCount: 0,
@@ -151,20 +168,21 @@ router.post("/swipes", async (req, res) => {
   res.json(CreateSwipeResponse.parse({ action: input.action, isMatch, match }));
 });
 
-router.get("/matches", async (_req, res) => {
+router.get("/matches", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
   const rows = await db()
     .select()
     .from(matchesTable)
     .where(
       or(
-        eq(matchesTable.profileA, CURRENT_USER),
-        eq(matchesTable.profileB, CURRENT_USER),
+        eq(matchesTable.profileA, userId),
+        eq(matchesTable.profileB, userId),
       ),
     );
 
   const result: Array<Record<string, unknown>> = [];
   for (const m of rows) {
-    const otherId = m.profileA === CURRENT_USER ? m.profileB : m.profileA;
+    const otherId = m.profileA === userId ? m.profileB : m.profileA;
     const profile = await getProfile(otherId);
     result.push({ id: m.id, profile, matchedAt: m.matchedAt, unreadCount: m.unreadCount });
   }
@@ -174,7 +192,7 @@ router.get("/matches", async (_req, res) => {
 // ---------------------------------------------------------------------------
 // events
 // ---------------------------------------------------------------------------
-router.get("/events", async (req, res) => {
+router.get("/events", async (req: AuthedRequest, res) => {
   const parsed = GetEventsQueryParams.parse(req.query);
   const rows = await db().select().from(eventsTable);
   const filtered = rows.filter((event) => {
@@ -195,23 +213,24 @@ router.get("/events", async (req, res) => {
   res.json(GetEventsResponse.parse(result));
 });
 
-router.post("/events", async (req, res) => {
+router.post("/events", async (req: AuthedRequest, res) => {
   const input = CreateEventBody.parse(req.body);
+  const userId = req.user!.id;
   const event = {
     id: `event-${Date.now()}`,
     ...input,
-    hostId: CURRENT_USER,
+    hostId: userId,
     attendees: 1,
     joined: true,
     visibility: input.visibility ?? "public",
     imageUrl: input.imageUrl ?? image("photo-1522163182402-834f871fd851"),
   };
   await db().insert(eventsTable).values(event);
-  const host = await getProfile(CURRENT_USER);
+  const host = await getProfile(userId);
   res.status(201).json(CreateEventResponse.parse({ ...event, host }));
 });
 
-router.post("/events/:eventId/rsvp", async (req, res) => {
+router.post("/events/:eventId/rsvp", async (req: AuthedRequest, res) => {
   const parsed = RsvpToEventParams.parse(req.params);
   const [event] = await db()
     .select()
@@ -235,8 +254,9 @@ router.post("/events/:eventId/rsvp", async (req, res) => {
 // ---------------------------------------------------------------------------
 // checkins
 // ---------------------------------------------------------------------------
-router.post("/checkins", async (req, res) => {
+router.post("/checkins", async (req: AuthedRequest, res) => {
   const input = CreateCheckinBody.parse(req.body);
+  const userId = req.user!.id;
   const [gym] = await db()
     .select()
     .from(placesTable)
@@ -263,7 +283,7 @@ router.post("/checkins", async (req, res) => {
     gymId: checkin.gymId,
     gymName: checkin.gymName,
     createdAt: now,
-    profileId: CURRENT_USER,
+    profileId: userId,
     note: checkin.note || null,
   });
   res.status(201).json(CreateCheckinResponse.parse(checkin));
@@ -272,7 +292,7 @@ router.post("/checkins", async (req, res) => {
 // ---------------------------------------------------------------------------
 // conversations + messages
 // ---------------------------------------------------------------------------
-router.get("/conversations", async (_req, res) => {
+router.get("/conversations", async (_req: AuthedRequest, res) => {
   const rows = await db().select().from(conversationsTable);
   const result: Array<Record<string, unknown>> = [];
   for (const conversation of rows) {
@@ -288,7 +308,7 @@ router.get("/conversations", async (_req, res) => {
   res.json(GetConversationsResponse.parse(result));
 });
 
-router.get("/conversations/:conversationId/messages", async (req, res) => {
+router.get("/conversations/:conversationId/messages", async (req: AuthedRequest, res) => {
   const parsed = GetMessagesParams.parse(req.params);
   const rows = await db()
     .select()
@@ -297,9 +317,10 @@ router.get("/conversations/:conversationId/messages", async (req, res) => {
   res.json(GetMessagesResponse.parse(rows));
 });
 
-router.post("/conversations/:conversationId/messages", async (req, res) => {
+router.post("/conversations/:conversationId/messages", async (req: AuthedRequest, res) => {
   const params = CreateMessageParams.parse(req.params);
   const input = CreateMessageBody.parse(req.body);
+  const userId = req.user!.id;
 
   const [conversation] = await db()
     .select()
@@ -313,7 +334,7 @@ router.post("/conversations/:conversationId/messages", async (req, res) => {
   const message = {
     id: `msg-${Date.now()}`,
     conversationId: params.conversationId,
-    senderId: CURRENT_USER,
+    senderId: userId,
     body: input.body,
     sentAt: "Just now",
     isMine: true,

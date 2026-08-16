@@ -2,8 +2,9 @@
 import { useState } from 'react';
 import type React from 'react';
 import { Link, useLocation } from 'wouter';
-import { CalendarDays, ChevronRight, Compass, MapPin, MessageCircle, MoreHorizontal, Zap } from 'lucide-react';
+import { CalendarDays, ChevronRight, Compass, LogOut, MapPin, MessageCircle, MoreHorizontal, Zap } from 'lucide-react';
 import { useGetMyProfile } from '@workspace/api-client-react';
+import { supabase } from '@/lib/supabase';
 import { Avatar } from './avatar';
 import { Logo } from './logo';
 
@@ -42,6 +43,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
             <span className="min-w-0 flex-1"><strong className="block truncate text-sm">{profile?.name ?? 'Your profile'}</strong><span className="text-[11px] text-sidebar-foreground/50">Edit your details</span></span>
             <ChevronRight size={15} className="text-sidebar-foreground/40" />
           </Link>
+          <button data-testid="button-sign-out" onClick={() => supabase.auth.signOut()} className="mt-2 flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-xs font-bold text-sidebar-foreground/50 transition-colors hover:bg-sidebar-accent hover:text-sidebar-foreground"><LogOut size={14} /> Sign out</button>
         </div>
       </aside>
       {mobileOpen && <button data-testid="button-close-menu" aria-label="Close menu" onClick={() => setMobileOpen(false)} className="fixed inset-0 z-30 bg-sidebar/40 md:hidden" />}
