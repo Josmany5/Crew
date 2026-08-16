@@ -14,7 +14,8 @@ A community-built climbing app: matching + social events around real places (gym
 | Events: public vs. crew-only | ✅ Done (Phase 1) |
 | App code organization | ✅ Split into pages/components (Phase 0) |
 | Git + GitHub | ✅ Pushed → **github.com/Josmany5/Crew** |
-| Real accounts + database | ⏳ **Next up** (Phase 5 — Supabase) |
+| **Real database (Supabase Postgres)** | ✅ **Done — data persists across restarts** |
+| Accounts/auth (sign-up/login) | ⏳ In progress (Phase 5) |
 | Gym/crag place pages + social events | 🗒️ Planned (Phase 2) |
 | Friends + posts, news channels, app stores | 🗒️ Planned (Phases 3–4, then stores) |
 
@@ -33,7 +34,7 @@ PORT=5001 BASE_PATH=/ pnpm --filter @workspace/crew run dev
 
 Open **http://localhost:5001**.
 
-> Data is currently in-memory: it resets when the API server restarts. No accounts yet — you're "Sam Rivera."
+> Data lives in **Supabase Postgres** — it persists across server restarts. Accounts/auth is in progress; until it lands, you're the seeded demo user "Sam Rivera."
 
 ### Useful commands
 

@@ -38,6 +38,7 @@ async function buildAll() {
       "fsevents",
       "re2",
       "farmhash",
+      "pg-native",
       "xxhash-addon",
       "bufferutil",
       "utf-8-validate",

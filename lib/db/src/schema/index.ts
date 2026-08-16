@@ -69,6 +69,7 @@ export const profilesTable = pgTable(
     gear: jsonb("gear").$type<string[]>().notNull().default([]),
     openToDating: boolean("open_to_dating").notNull().default(false),
     verified: boolean("verified").notNull().default(false),
+    matchPercent: integer("match_percent").notNull().default(0),
     lastActive: text("last_active").notNull().default("now"),
     climbingLevel: text("climbing_level"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
