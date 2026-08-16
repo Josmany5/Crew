@@ -10,6 +10,14 @@ servers:
 tags:
   - name: health
     description: Health operations
+  - name: discovery
+    description: Climber and gym discovery
+  - name: profile
+    description: Current climber profile
+  - name: events
+    description: Climbing events and meetups
+  - name: messaging
+    description: Conversations and direct messages
 paths:
   /healthz:
     get:
@@ -24,6 +32,235 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /discover:
+    get:
+      operationId: getDiscoverProfiles
+      tags: [discovery]
+      summary: Get suggested climbing partners
+      parameters:
+        - name: gymId
+          in: query
+          schema:
+            type: string
+        - name: discipline
+          in: query
+          schema:
+            type: string
+            enum: [bouldering, ropes, outdoor, any]
+      responses:
+        "200":
+          description: Suggested profiles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClimberProfile"
+  /gyms:
+    get:
+      operationId: getGyms
+      tags: [discovery]
+      summary: List nearby climbing gyms
+      responses:
+        "200":
+          description: Nearby gyms
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Gym"
+  /profile:
+    get:
+      operationId: getMyProfile
+      tags: [profile]
+      summary: Get the current climber profile
+      responses:
+        "200":
+          description: Current profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClimberProfile"
+    patch:
+      operationId: updateMyProfile
+      tags: [profile]
+      summary: Update the current climber profile
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ProfileUpdate"
+      responses:
+        "200":
+          description: Updated profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClimberProfile"
+  /swipes:
+    post:
+      operationId: createSwipe
+      tags: [discovery]
+      summary: Like or pass on a climber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SwipeInput"
+      responses:
+        "200":
+          description: Swipe result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwipeResult"
+  /matches:
+    get:
+      operationId: getMatches
+      tags: [discovery]
+      summary: Get current matches
+      responses:
+        "200":
+          description: Matches
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Match"
+  /events:
+    get:
+      operationId: getEvents
+      tags: [events]
+      summary: List nearby climbing events
+      parameters:
+        - name: type
+          in: query
+          schema:
+            type: string
+            enum: [gym, outdoor, trip, all]
+      responses:
+        "200":
+          description: Events
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClimbingEvent"
+    post:
+      operationId: createEvent
+      tags: [events]
+      summary: Create a climbing event
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EventInput"
+      responses:
+        "201":
+          description: Created event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClimbingEvent"
+  /events/{eventId}/rsvp:
+    post:
+      operationId: rsvpToEvent
+      tags: [events]
+      summary: RSVP to a climbing event
+      parameters:
+        - name: eventId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Updated event
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClimbingEvent"
+  /checkins:
+    post:
+      operationId: createCheckin
+      tags: [events]
+      summary: Check in at a climbing gym
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CheckinInput"
+      responses:
+        "201":
+          description: Check-in created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Checkin"
+  /conversations:
+    get:
+      operationId: getConversations
+      tags: [messaging]
+      summary: List direct message conversations
+      responses:
+        "200":
+          description: Conversations
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Conversation"
+  /conversations/{conversationId}/messages:
+    get:
+      operationId: getMessages
+      tags: [messaging]
+      summary: Get messages in a conversation
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Messages
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Message"
+    post:
+      operationId: createMessage
+      tags: [messaging]
+      summary: Send a direct message
+      parameters:
+        - name: conversationId
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/MessageInput"
+      responses:
+        "201":
+          description: Sent message
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Message"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +270,167 @@ components:
           type: string
       required:
         - status
+    ClimberProfile:
+      type: object
+      required: [id, name, age, location, bio, avatarUrl, disciplines, gyms, availability, matchPercent, openToDating, gear, verified]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        age: { type: number }
+        location: { type: string }
+        bio: { type: string }
+        avatarUrl: { type: string }
+        disciplines:
+          type: array
+          items: { type: string }
+        gyms:
+          type: array
+          items: { type: string }
+        availability:
+          type: array
+          items: { type: string }
+        matchPercent: { type: number }
+        openToDating: { type: boolean }
+        gear:
+          type: array
+          items: { type: string }
+        verified: { type: boolean }
+        lastActive: { type: string }
+        climbingLevel: { type: string }
+    ProfileUpdate:
+      type: object
+      properties:
+        name: { type: string }
+        age: { type: number }
+        location: { type: string }
+        bio: { type: string }
+        avatarUrl: { type: string }
+        disciplines:
+          type: array
+          items: { type: string }
+        gyms:
+          type: array
+          items: { type: string }
+        availability:
+          type: array
+          items: { type: string }
+        openToDating: { type: boolean }
+        gear:
+          type: array
+          items: { type: string }
+        climbingLevel: { type: string }
+    Gym:
+      type: object
+      required: [id, name, neighborhood, distance, memberCount, checkedInCount, imageUrl]
+      properties:
+        id: { type: string }
+        name: { type: string }
+        neighborhood: { type: string }
+        distance: { type: string }
+        memberCount: { type: number }
+        checkedInCount: { type: number }
+        imageUrl: { type: string }
+        specialties:
+          type: array
+          items: { type: string }
+    SwipeInput:
+      type: object
+      required: [profileId, action]
+      properties:
+        profileId: { type: string }
+        action:
+          type: string
+          enum: [like, pass]
+    SwipeResult:
+      type: object
+      required: [action, isMatch]
+      properties:
+        action: { type: string }
+        isMatch: { type: boolean }
+        match:
+          anyOf:
+            - $ref: "#/components/schemas/Match"
+            - type: "null"
+    Match:
+      type: object
+      required: [id, profile, matchedAt, unreadCount]
+      properties:
+        id: { type: string }
+        profile:
+          $ref: "#/components/schemas/ClimberProfile"
+        matchedAt: { type: string }
+        unreadCount: { type: number }
+    ClimbingEvent:
+      type: object
+      required: [id, title, type, dateLabel, timeLabel, location, host, spots, attendees, description, imageUrl, joined]
+      properties:
+        id: { type: string }
+        title: { type: string }
+        type:
+          type: string
+          enum: [gym, outdoor, trip]
+        dateLabel: { type: string }
+        timeLabel: { type: string }
+        location: { type: string }
+        host:
+          $ref: "#/components/schemas/ClimberProfile"
+        spots: { type: number }
+        attendees: { type: number }
+        description: { type: string }
+        imageUrl: { type: string }
+        joined: { type: boolean }
+    EventInput:
+      type: object
+      required: [title, type, dateLabel, timeLabel, location, description, spots]
+      properties:
+        title: { type: string }
+        type:
+          type: string
+          enum: [gym, outdoor, trip]
+        dateLabel: { type: string }
+        timeLabel: { type: string }
+        location: { type: string }
+        description: { type: string }
+        spots: { type: number }
+        imageUrl: { type: string }
+    CheckinInput:
+      type: object
+      required: [gymId]
+      properties:
+        gymId: { type: string }
+        note: { type: string }
+    Checkin:
+      type: object
+      required: [id, gymId, gymName, createdAt]
+      properties:
+        id: { type: string }
+        gymId: { type: string }
+        gymName: { type: string }
+        createdAt: { type: string }
+        note: { type: string }
+    Conversation:
+      type: object
+      required: [id, profile, lastMessage, lastMessageAt, unreadCount]
+      properties:
+        id: { type: string }
+        profile:
+          $ref: "#/components/schemas/ClimberProfile"
+        lastMessage: { type: string }
+        lastMessageAt: { type: string }
+        unreadCount: { type: number }
+    Message:
+      type: object
+      required: [id, conversationId, senderId, body, sentAt, isMine]
+      properties:
+        id: { type: string }
+        conversationId: { type: string }
+        senderId: { type: string }
+        body: { type: string }
+        sentAt: { type: string }
+        isMine: { type: boolean }
+    MessageInput:
+      type: object
+      required: [body]
+      properties:
+        body: { type: string, minLength: 1 }
 

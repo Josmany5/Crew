@@ -1,6 +1,6 @@
-# [Project name]
+# Crew
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+Crew helps climbers find belay partners, bouldering buddies, outdoor trip companions, and local group sessions based on gyms, disciplines, gear, and availability.
 
 ## Run & Operate
 
@@ -22,23 +22,36 @@ _Replace the heading above with the project's name, and this line with one sente
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/crew` — responsive web app with discovery, gyms, events, messages, and profile routes
+- `artifacts/api-server/src/routes/crew.ts` — climbing discovery and community API routes with seeded local beta data
+- `lib/api-spec/openapi.yaml` — source of truth for generated API hooks and validation schemas
+- `artifacts/crew/src/index.css` — Crew visual tokens and responsive styling
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- The first build uses an OpenAPI-first contract so the frontend can work against typed hooks as the product grows.
+- The initial experience is a local-beta demo with seeded Portland gyms and climbers; write actions update the running API store.
+- Profile photos can be selected directly in the profile editor and saved as the profile avatar value for the MVP.
+- Matching is intentionally framed around climbing plans and consent-aware connection settings, not generic dating discovery.
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- Discover climbers by discipline and shared gym
+- Like or pass on partner suggestions and see matches
+- Browse gyms, see local activity, and check in
+- Create or RSVP to gym sessions, outdoor days, and trips
+- Edit climbing level, gear, gyms, availability, profile photo, and dating preference
+- Open matched conversations and send direct messages
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+- The user wants the app to support climbing-only connections as well as optional dating openness.
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Run API codegen after changing `lib/api-spec/openapi.yaml`.
+- The API server workflow must be restarted after changing server route code because its dev command bundles before starting.
+- The current local-beta store is in memory and is intended to be replaced with persistent user accounts and storage before production use.
 
 ## Pointers
 

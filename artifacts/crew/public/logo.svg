@@ -1,0 +1,5 @@
+<svg width="160" height="40" viewBox="0 0 160 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="40" height="40" rx="11" fill="#D1FF57"/>
+  <path d="M12 27.5L19.8 12.5L24.1 20.3L28 14.5L34 27.5H12Z" stroke="#203A38" stroke-width="2.6" stroke-linejoin="round"/>
+  <text x="50" y="26" fill="#F6F3E9" font-family="Space Grotesk, sans-serif" font-size="18" font-weight="700" letter-spacing="-1">crew</text>
+</svg>
