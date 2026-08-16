@@ -6,10 +6,12 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { EventInputType } from './eventInputType';
+import type { EventInputVisibility } from './eventInputVisibility';
 
 export interface EventInput {
   title: string;
   type: EventInputType;
+  visibility: EventInputVisibility;
   dateLabel: string;
   timeLabel: string;
   location: string;

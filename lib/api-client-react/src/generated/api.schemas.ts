@@ -87,10 +87,19 @@ export const ClimbingEventType = {
   trip: 'trip',
 } as const;
 
+export type ClimbingEventVisibility = typeof ClimbingEventVisibility[keyof typeof ClimbingEventVisibility];
+
+
+export const ClimbingEventVisibility = {
+  public: 'public',
+  'crew-only': 'crew-only',
+} as const;
+
 export interface ClimbingEvent {
   id: string;
   title: string;
   type: ClimbingEventType;
+  visibility: ClimbingEventVisibility;
   dateLabel: string;
   timeLabel: string;
   location: string;
@@ -111,9 +120,18 @@ export const EventInputType = {
   trip: 'trip',
 } as const;
 
+export type EventInputVisibility = typeof EventInputVisibility[keyof typeof EventInputVisibility];
+
+
+export const EventInputVisibility = {
+  public: 'public',
+  'crew-only': 'crew-only',
+} as const;
+
 export interface EventInput {
   title: string;
   type: EventInputType;
+  visibility: EventInputVisibility;
   dateLabel: string;
   timeLabel: string;
   location: string;
@@ -174,6 +192,7 @@ export const GetDiscoverProfilesDiscipline = {
 
 export type GetEventsParams = {
 type?: GetEventsType;
+visibility?: GetEventsVisibility;
 };
 
 export type GetEventsType = typeof GetEventsType[keyof typeof GetEventsType];
@@ -183,6 +202,15 @@ export const GetEventsType = {
   gym: 'gym',
   outdoor: 'outdoor',
   trip: 'trip',
+  all: 'all',
+} as const;
+
+export type GetEventsVisibility = typeof GetEventsVisibility[keyof typeof GetEventsVisibility];
+
+
+export const GetEventsVisibility = {
+  public: 'public',
+  'crew-only': 'crew-only',
   all: 'all',
 } as const;
 

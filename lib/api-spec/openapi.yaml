@@ -142,6 +142,11 @@ paths:
           schema:
             type: string
             enum: [gym, outdoor, trip, all]
+        - name: visibility
+          in: query
+          schema:
+            type: string
+            enum: [public, crew-only, all]
       responses:
         "200":
           description: Events
@@ -362,13 +367,16 @@ components:
         unreadCount: { type: number }
     ClimbingEvent:
       type: object
-      required: [id, title, type, dateLabel, timeLabel, location, host, spots, attendees, description, imageUrl, joined]
+      required: [id, title, type, visibility, dateLabel, timeLabel, location, host, spots, attendees, description, imageUrl, joined]
       properties:
         id: { type: string }
         title: { type: string }
         type:
           type: string
           enum: [gym, outdoor, trip]
+        visibility:
+          type: string
+          enum: [public, crew-only]
         dateLabel: { type: string }
         timeLabel: { type: string }
         location: { type: string }
@@ -381,12 +389,15 @@ components:
         joined: { type: boolean }
     EventInput:
       type: object
-      required: [title, type, dateLabel, timeLabel, location, description, spots]
+      required: [title, type, visibility, dateLabel, timeLabel, location, description, spots]
       properties:
         title: { type: string }
         type:
           type: string
           enum: [gym, outdoor, trip]
+        visibility:
+          type: string
+          enum: [public, crew-only]
         dateLabel: { type: string }
         timeLabel: { type: string }
         location: { type: string }

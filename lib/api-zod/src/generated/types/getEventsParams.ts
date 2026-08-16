@@ -6,7 +6,9 @@
  * OpenAPI spec version: 0.1.0
  */
 import type { GetEventsType } from './getEventsType';
+import type { GetEventsVisibility } from './getEventsVisibility';
 
 export type GetEventsParams = {
 type?: GetEventsType;
+visibility?: GetEventsVisibility;
 };

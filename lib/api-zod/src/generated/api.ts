@@ -187,13 +187,15 @@ export const GetMatchesResponse = zod.array(GetMatchesResponseItem)
  * @summary List nearby climbing events
  */
 export const GetEventsQueryParams = zod.object({
-  "type": zod.enum(['gym', 'outdoor', 'trip', 'all']).optional()
+  "type": zod.enum(['gym', 'outdoor', 'trip', 'all']).optional(),
+  "visibility": zod.enum(['public', 'crew-only', 'all']).optional()
 })
 
 export const GetEventsResponseItem = zod.object({
   "id": zod.string(),
   "title": zod.string(),
   "type": zod.enum(['gym', 'outdoor', 'trip']),
+  "visibility": zod.enum(['public', 'crew-only']),
   "dateLabel": zod.string(),
   "timeLabel": zod.string(),
   "location": zod.string(),
@@ -229,6 +231,7 @@ export const GetEventsResponse = zod.array(GetEventsResponseItem)
 export const CreateEventBody = zod.object({
   "title": zod.string(),
   "type": zod.enum(['gym', 'outdoor', 'trip']),
+  "visibility": zod.enum(['public', 'crew-only']),
   "dateLabel": zod.string(),
   "timeLabel": zod.string(),
   "location": zod.string(),
@@ -241,6 +244,7 @@ export const CreateEventResponse = zod.object({
   "id": zod.string(),
   "title": zod.string(),
   "type": zod.enum(['gym', 'outdoor', 'trip']),
+  "visibility": zod.enum(['public', 'crew-only']),
   "dateLabel": zod.string(),
   "timeLabel": zod.string(),
   "location": zod.string(),
@@ -280,6 +284,7 @@ export const RsvpToEventResponse = zod.object({
   "id": zod.string(),
   "title": zod.string(),
   "type": zod.enum(['gym', 'outdoor', 'trip']),
+  "visibility": zod.enum(['public', 'crew-only']),
   "dateLabel": zod.string(),
   "timeLabel": zod.string(),
   "location": zod.string(),

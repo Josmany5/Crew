@@ -172,6 +172,7 @@ const events = [
     id: "event-tuesday",
     title: "Tuesday night boulders",
     type: "gym",
+    visibility: "crew-only",
     dateLabel: "Tue, Jun 18",
     timeLabel: "6:30 pm",
     location: "The Circuit · Southeast",
@@ -186,6 +187,7 @@ const events = [
     id: "event-smith",
     title: "Smith Rock weekend crew",
     type: "trip",
+    visibility: "public",
     dateLabel: "Jun 28–30",
     timeLabel: "7:00 am",
     location: "Smith Rock State Park",
@@ -200,6 +202,7 @@ const events = [
     id: "event-sunday",
     title: "Sunday ropes and coffee",
     type: "outdoor",
+    visibility: "public",
     dateLabel: "Sun, Jun 23",
     timeLabel: "8:00 am",
     location: "Carver · Oregon",
@@ -296,10 +299,15 @@ router.get("/matches", (_req, res) => {
 
 router.get("/events", (req, res) => {
   const parsed = GetEventsQueryParams.parse(req.query);
-  const result =
-    !parsed.type || parsed.type === "all"
-      ? events
-      : events.filter((event) => event.type === parsed.type);
+  const result = events.filter((event) => {
+    const typeMatches =
+      !parsed.type || parsed.type === "all" || event.type === parsed.type;
+    const visibilityMatches =
+      !parsed.visibility ||
+      parsed.visibility === "all" ||
+      event.visibility === parsed.visibility;
+    return typeMatches && visibilityMatches;
+  });
   res.json(GetEventsResponse.parse(result));
 });
 
@@ -311,6 +319,7 @@ router.post("/events", (req, res) => {
     host: sam,
     attendees: 1,
     joined: true,
+    visibility: input.visibility ?? "public",
     imageUrl: input.imageUrl ?? image("photo-1522163182402-834f871fd851"),
   };
   events.unshift(event);

@@ -7,11 +7,13 @@
  */
 import type { ClimberProfile } from './climberProfile';
 import type { ClimbingEventType } from './climbingEventType';
+import type { ClimbingEventVisibility } from './climbingEventVisibility';
 
 export interface ClimbingEvent {
   id: string;
   title: string;
   type: ClimbingEventType;
+  visibility: ClimbingEventVisibility;
   dateLabel: string;
   timeLabel: string;
   location: string;
