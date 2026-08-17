@@ -106,6 +106,12 @@ artifacts/
 - "Invite your crew" — send an event to matched climbers
 - Lightweight comments on events ("is this dog-friendly?")
 - Shareable event link/page
+- **"Hosting" vs "Looking" mode** — events are either *"I'm hosting"* (fixed plan, RSVP + spots) or *"I'm looking for partners"* (open request: *"want to do Smith Rock this weekend?"* with an **"I'm in"** interest button and an interested-count instead of spots); Events page filters by All / Hosting / Looking
+
+**Discovery filters**
+- Advanced Discover filter sheet: **gym, age range, climbing-level band, gear, verified-only, open-to-dating**
+- Requires structured grade columns on profiles (boulder + route as numbers) so level filtering is real
+- Deferred: matching "Looking" requests to compatible climbers via the same filter engine (the "advanced trip matches" idea)
 
 **Official gym events**
 - Place pages get a **"Claim this gym"** flow (verify ownership) → staff post "Official" events with a verified badge
@@ -137,8 +143,15 @@ artifacts/
 
 Ideas discussed and deferred — kept here so nothing is lost.
 
+### Discovery & matching
+- **Advanced Discover filters** (filter sheet/drawer): gym, age range, climbing-level band, gear, verified-only, open-to-dating
+  - Needs structured grade columns on profiles (boulder + route as numbers) for real level filtering
+  - One-time migration parses existing free-text levels ("V4 / 5.10b") into them
+- **"Looking for partners" request matching** (the advanced-trip-matches idea): match a "Looking" post (e.g. "Smith Rock, 5.10+, have rope") to compatible climbers using the same filter engine — surfaces "3 climbers nearby match this trip"
+
 ### Events
 - Going / Maybe / Can't-go RSVP states; guest lists; waitlists; invites; comments; shareable event links
+- **"Hosting" vs "Looking" mode** — open partner requests with an "I'm in" interest button and interested-count, instead of fixed spots/hosting
 - "Add to calendar" (defer), post-event photo sharing (defer)
 - Maybe-nudges: "Host starts in 2 hours — are you in?" (needs notifications)
 - Events attach to a place (gym or crag) via a picker
