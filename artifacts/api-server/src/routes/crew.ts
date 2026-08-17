@@ -68,7 +68,7 @@ async function ensureProfile(id: string) {
     name: "Climber",
     age: 0,
     location: "",
-    bio: "New to the crew — say hi!",
+    bio: "",
     avatarUrl: "",
     climbingLevel: "",
   });
