@@ -26,6 +26,7 @@ import type {
   ClimbingEvent,
   Conversation,
   ConversationInput,
+  DeleteProfile200,
   EventInput,
   GetDiscoverProfilesParams,
   GetEventsParams,
@@ -452,6 +453,77 @@ export const useUpdateMyProfile = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getUpdateMyProfileMutationOptions(options));
+    }
+
+export const getDeleteProfileUrl = () => {
+
+
+
+
+  return `/api/profile`
+}
+
+/**
+ * @summary Permanently delete your account and all your data
+ */
+export const deleteProfile = async ( options?: Parameters<typeof customFetch>[1]): Promise<DeleteProfile200> => {
+
+  return customFetch<DeleteProfile200>(getDeleteProfileUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeleteProfileMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProfile>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteProfile>>, TError,void, TContext> => {
+
+const mutationKey = ['deleteProfile'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteProfile>>, void> = () => {
+
+
+          return  deleteProfile(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteProfileMutationResult = NonNullable<Awaited<ReturnType<typeof deleteProfile>>>
+
+    export type DeleteProfileMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Permanently delete your account and all your data
+ */
+export const useDeleteProfile = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteProfile>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteProfile>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getDeleteProfileMutationOptions(options));
     }
 
 export const getCreateSwipeUrl = () => {

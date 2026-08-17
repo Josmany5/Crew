@@ -124,6 +124,14 @@ export const UpdateMyProfileResponse = zod.object({
 
 
 /**
+ * @summary Permanently delete your account and all your data
+ */
+export const DeleteProfileResponse = zod.object({
+  "ok": zod.boolean().optional()
+})
+
+
+/**
  * @summary Like or pass on a climber
  */
 export const CreateSwipeBody = zod.object({

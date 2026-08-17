@@ -198,6 +198,10 @@ export const GetDiscoverProfilesDiscipline = {
   any: 'any',
 } as const;
 
+export type DeleteProfile200 = {
+  ok?: boolean;
+};
+
 export type Unmatch200 = {
   ok?: boolean;
 };

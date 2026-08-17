@@ -8,9 +8,11 @@ import {
   messagesTable,
   placesTable,
   profilesTable,
+  rsvpsTable,
   swipesTable,
 } from "@workspace/db/schema";
 import { db } from "../lib/drizzle";
+import { supabase } from "../lib/supabase";
 import { requireAuth, type AuthedRequest } from "../lib/auth";
 import {
   CreateCheckinBody,
@@ -34,6 +36,7 @@ import {
   GetMessagesParams,
   GetMessagesResponse,
   GetMyProfileResponse,
+  DeleteProfileResponse,
   GetPendingLikesResponse,
   RsvpToEventParams,
   RsvpToEventResponse,
@@ -129,6 +132,52 @@ router.patch("/profile", async (req: AuthedRequest, res) => {
     .where(eq(profilesTable.id, userId));
   const profile = await getProfile(userId);
   res.json(UpdateMyProfileResponse.parse(profile));
+});
+
+router.delete("/profile", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
+
+  // Remove all user-related data before deleting the account.
+  await db()
+    .delete(swipesTable)
+    .where(or(eq(swipesTable.actorId, userId), eq(swipesTable.targetId, userId)));
+  await db()
+    .delete(matchesTable)
+    .where(or(eq(matchesTable.profileA, userId), eq(matchesTable.profileB, userId)));
+  await db().delete(eventsTable).where(eq(eventsTable.hostId, userId));
+
+  const conversations = await db()
+    .select()
+    .from(conversationsTable)
+    .where(
+      or(
+        eq(conversationsTable.participantA, userId),
+        eq(conversationsTable.participantB, userId),
+      ),
+    );
+  for (const conversation of conversations) {
+    await db()
+      .delete(messagesTable)
+      .where(eq(messagesTable.conversationId, conversation.id));
+  }
+  await db()
+    .delete(conversationsTable)
+    .where(
+      or(
+        eq(conversationsTable.participantA, userId),
+        eq(conversationsTable.participantB, userId),
+      ),
+    );
+  await db().delete(checkinsTable).where(eq(checkinsTable.profileId, userId));
+  await db().delete(rsvpsTable).where(eq(rsvpsTable.profileId, userId));
+  await db().delete(profilesTable).where(eq(profilesTable.id, userId));
+
+  const { error } = await supabase().auth.admin.deleteUser(userId);
+  if (error) {
+    res.status(500).json({ error: "Could not delete the account" });
+    return;
+  }
+  res.json(DeleteProfileResponse.parse({ ok: true }));
 });
 
 // ---------------------------------------------------------------------------
@@ -288,7 +337,7 @@ router.post("/events", async (req: AuthedRequest, res) => {
     imageUrl: input.imageUrl ?? image("photo-1522163182402-834f871fd851"),
   };
   await db().insert(eventsTable).values(event);
-  const host = await getProfile(userId);
+  const host = await ensureProfile(userId);
   res.status(201).json(CreateEventResponse.parse({ ...event, host }));
 });
 

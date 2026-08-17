@@ -14,6 +14,7 @@ export * from './climbingEventType';
 export * from './climbingEventVisibility';
 export * from './conversation';
 export * from './conversationInput';
+export * from './deleteProfile200';
 export * from './eventInput';
 export * from './eventInputType';
 export * from './eventInputVisibility';

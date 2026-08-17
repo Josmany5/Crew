@@ -99,6 +99,20 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ClimberProfile"
+    delete:
+      operationId: deleteProfile
+      tags: [profile]
+      summary: Permanently delete your account and all your data
+      responses:
+        "200":
+          description: Account deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
   /swipes:
     post:
       operationId: createSwipe
