@@ -34,6 +34,7 @@ import {
   GetMessagesParams,
   GetMessagesResponse,
   GetMyProfileResponse,
+  GetPendingLikesResponse,
   RsvpToEventParams,
   RsvpToEventResponse,
   UnmatchParams,
@@ -184,6 +185,29 @@ router.post("/swipes", async (req: AuthedRequest, res) => {
   }
 
   res.json(CreateSwipeResponse.parse({ action: input.action, isMatch, match }));
+});
+
+router.get("/swipes", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
+  const [swipes, allMatches] = await Promise.all([
+    db()
+      .select()
+      .from(swipesTable)
+      .where(and(eq(swipesTable.actorId, userId), eq(swipesTable.action, "like"))),
+    db().select().from(matchesTable),
+  ]);
+  const matchedIds = new Set(
+    allMatches
+      .filter((m) => m.profileA === userId || m.profileB === userId)
+      .map((m) => (m.profileA === userId ? m.profileB : m.profileA)),
+  );
+  const result: Array<Record<string, unknown>> = [];
+  for (const swipe of swipes) {
+    if (matchedIds.has(swipe.targetId)) continue;
+    const profile = await ensureProfile(swipe.targetId);
+    result.push(profile);
+  }
+  res.json(GetPendingLikesResponse.parse(result));
 });
 
 router.get("/matches", async (req: AuthedRequest, res) => {

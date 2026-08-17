@@ -525,6 +525,83 @@ export const useCreateSwipe = <TError = ErrorType<unknown>,
       return useMutation(getCreateSwipeMutationOptions(options));
     }
 
+export const getGetPendingLikesUrl = () => {
+
+
+
+
+  return `/api/swipes`
+}
+
+/**
+ * @summary Get climbers you've liked who haven't liked you back yet
+ */
+export const getPendingLikes = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClimberProfile[]> => {
+
+  return customFetch<ClimberProfile[]>(getGetPendingLikesUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPendingLikesQueryKey = () => {
+    return [
+    `/api/swipes`
+    ] as const;
+    }
+
+
+export const getGetPendingLikesQueryOptions = <TData = Awaited<ReturnType<typeof getPendingLikes>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingLikes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPendingLikesQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPendingLikes>>> = ({ signal }) => getPendingLikes({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPendingLikes>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPendingLikesQueryResult = NonNullable<Awaited<ReturnType<typeof getPendingLikes>>>
+export type GetPendingLikesQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get climbers you've liked who haven't liked you back yet
+ */
+
+export function useGetPendingLikes<TData = Awaited<ReturnType<typeof getPendingLikes>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPendingLikes>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPendingLikesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getGetMatchesUrl = () => {
 
 

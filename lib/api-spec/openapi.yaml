@@ -117,6 +117,19 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/SwipeResult"
+    get:
+      operationId: getPendingLikes
+      tags: [discovery]
+      summary: Get climbers you've liked who haven't liked you back yet
+      responses:
+        "200":
+          description: Pending likes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClimberProfile"
   /matches:
     get:
       operationId: getMatches

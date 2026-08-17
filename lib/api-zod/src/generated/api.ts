@@ -156,6 +156,29 @@ export const CreateSwipeResponse = zod.object({
 
 
 /**
+ * @summary Get climbers you've liked who haven't liked you back yet
+ */
+export const GetPendingLikesResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+})
+export const GetPendingLikesResponse = zod.array(GetPendingLikesResponseItem)
+
+
+/**
  * @summary Get current matches
  */
 export const GetMatchesResponseItem = zod.object({
