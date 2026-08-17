@@ -5,6 +5,7 @@ import { Link, useLocation } from 'wouter';
 import { CalendarDays, ChevronRight, Compass, Heart, LogOut, MapPin, MessageCircle, MoreHorizontal, Zap } from 'lucide-react';
 import { useGetMyProfile } from '@workspace/api-client-react';
 import { supabase } from '@/lib/supabase';
+import { Onboarding } from '@/pages/onboarding';
 import { Avatar } from './avatar';
 import { Logo } from './logo';
 
@@ -21,6 +22,9 @@ function AppShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { data: profile } = useGetMyProfile();
   const [mobileOpen, setMobileOpen] = useState(false);
+  if (profile && profile.onboarded === false) {
+    return <Onboarding />;
+  }
   return (
     <div className="min-h-[100dvh] bg-background">
       <aside className={`fixed inset-y-0 left-0 z-40 flex w-[248px] flex-col bg-sidebar px-5 py-6 text-sidebar-foreground transition-transform duration-300 md:translate-x-0 ${mobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>

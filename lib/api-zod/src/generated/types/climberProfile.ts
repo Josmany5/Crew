@@ -13,6 +13,7 @@ export interface ClimberProfile {
   location: string;
   bio: string;
   avatarUrl: string;
+  onboarded?: boolean;
   disciplines: string[];
   gyms: string[];
   availability: string[];

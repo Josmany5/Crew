@@ -336,6 +336,7 @@ components:
         location: { type: string }
         bio: { type: string }
         avatarUrl: { type: string }
+        onboarded: { type: boolean }
         disciplines:
           type: array
           items: { type: string }
@@ -361,6 +362,7 @@ components:
         location: { type: string }
         bio: { type: string }
         avatarUrl: { type: string }
+        onboarded: { type: boolean }
         disciplines:
           type: array
           items: { type: string }

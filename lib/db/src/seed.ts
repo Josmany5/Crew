@@ -122,6 +122,9 @@ async function main() {
     },
   ]);
 
+  // Demo community profiles are treated as already onboarded.
+  await db.update(schema.profilesTable).set({ onboarded: true });
+
   // --- places (gyms) ---------------------------------------------------------
   await db.insert(schema.placesTable).values([
     {

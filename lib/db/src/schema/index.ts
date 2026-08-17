@@ -70,6 +70,7 @@ export const profilesTable = pgTable(
     openToDating: boolean("open_to_dating").notNull().default(false),
     verified: boolean("verified").notNull().default(false),
     matchPercent: integer("match_percent").notNull().default(0),
+    onboarded: boolean("onboarded").notNull().default(false),
     lastActive: text("last_active").notNull().default("now"),
     climbingLevel: text("climbing_level"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
