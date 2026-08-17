@@ -184,6 +184,18 @@ export const GetMatchesResponse = zod.array(GetMatchesResponseItem)
 
 
 /**
+ * @summary Unmatch a climber
+ */
+export const UnmatchParams = zod.object({
+  "matchId": zod.coerce.string()
+})
+
+export const UnmatchResponse = zod.object({
+  "ok": zod.boolean().optional()
+})
+
+
+/**
  * @summary List nearby climbing events
  */
 export const GetEventsQueryParams = zod.object({
@@ -352,11 +364,43 @@ export const GetConversationsResponseItem = zod.object({
   "lastActive": zod.string().optional(),
   "climbingLevel": zod.string().optional()
 }),
-  "lastMessage": zod.string(),
-  "lastMessageAt": zod.string(),
+  "lastMessage": zod.string().nullable(),
+  "lastMessageAt": zod.string().nullable(),
   "unreadCount": zod.number()
 })
 export const GetConversationsResponse = zod.array(GetConversationsResponseItem)
+
+
+/**
+ * @summary Start (or get) a conversation with a matched climber
+ */
+export const CreateConversationBody = zod.object({
+  "profileId": zod.string()
+})
+
+export const CreateConversationResponse = zod.object({
+  "id": zod.string(),
+  "profile": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+}),
+  "lastMessage": zod.string().nullable(),
+  "lastMessageAt": zod.string().nullable(),
+  "unreadCount": zod.number()
+})
 
 
 /**

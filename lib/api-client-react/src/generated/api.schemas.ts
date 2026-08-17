@@ -153,11 +153,17 @@ export interface Checkin {
   note?: string;
 }
 
+export interface ConversationInput {
+  profileId: string;
+}
+
 export interface Conversation {
   id: string;
   profile: ClimberProfile;
-  lastMessage: string;
-  lastMessageAt: string;
+  /** @nullable */
+  lastMessage: string | null;
+  /** @nullable */
+  lastMessageAt: string | null;
   unreadCount: number;
 }
 
@@ -189,6 +195,10 @@ export const GetDiscoverProfilesDiscipline = {
   outdoor: 'outdoor',
   any: 'any',
 } as const;
+
+export type Unmatch200 = {
+  ok?: boolean;
+};
 
 export type GetEventsParams = {
 type?: GetEventsType;

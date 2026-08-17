@@ -14,14 +14,21 @@ import { queryClient } from '@/lib/query-client';
 function Messages() {
   const conversationsQuery = useGetConversations();
   const conversations = conversationsQuery.data ?? [];
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const [selectedId, setSelectedId] = useState('');
   const [body, setBody] = useState('');
   const [moreOpen, setMoreOpen] = useState(false);
   const [readIds, setReadIds] = useState<string[]>([]);
   const [moreNotice, setMoreNotice] = useState('');
   const selected = conversations.find((conversation) => conversation.id === selectedId) ?? conversations[0];
-  useEffect(() => { if (!selectedId && conversations[0]) setSelectedId(conversations[0].id); }, [selectedId, conversations]);
+  const requestedConversation = new URLSearchParams(location.split('?')[1] ?? '').get('conversation');
+  useEffect(() => {
+    if (requestedConversation && conversations.some((conversation) => conversation.id === requestedConversation)) {
+      setSelectedId(requestedConversation);
+    } else if (!selectedId && conversations[0]) {
+      setSelectedId(conversations[0].id);
+    }
+  }, [selectedId, conversations, requestedConversation]);
   const messagesQuery = useGetMessages(selected?.id ?? '', { query: { queryKey: getGetMessagesQueryKey(selected?.id ?? ''), enabled: Boolean(selected?.id) } });
   const send = useCreateMessage();
   const submit = (event: React.FormEvent) => { event.preventDefault(); if (!selected || !body.trim()) return; send.mutate({ conversationId: selected.id, data: { body: body.trim() } }, { onSuccess: () => { setBody(''); queryClient.invalidateQueries({ queryKey: getGetMessagesQueryKey(selected.id) }); queryClient.invalidateQueries({ queryKey: getGetConversationsQueryKey() }); } }); };

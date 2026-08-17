@@ -25,6 +25,7 @@ import type {
   ClimberProfile,
   ClimbingEvent,
   Conversation,
+  ConversationInput,
   EventInput,
   GetDiscoverProfilesParams,
   GetEventsParams,
@@ -35,7 +36,8 @@ import type {
   MessageInput,
   ProfileUpdate,
   SwipeInput,
-  SwipeResult
+  SwipeResult,
+  Unmatch200
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -600,6 +602,77 @@ export function useGetMatches<TData = Awaited<ReturnType<typeof getMatches>>, TE
 
 
 
+export const getUnmatchUrl = (matchId: string,) => {
+
+
+
+
+  return `/api/matches/${matchId}`
+}
+
+/**
+ * @summary Unmatch a climber
+ */
+export const unmatch = async (matchId: string, options?: Parameters<typeof customFetch>[1]): Promise<Unmatch200> => {
+
+  return customFetch<Unmatch200>(getUnmatchUrl(matchId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getUnmatchMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unmatch>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof unmatch>>, TError,{matchId: string}, TContext> => {
+
+const mutationKey = ['unmatch'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof unmatch>>, {matchId: string}> = (props) => {
+          const {matchId} = props ?? {};
+
+          return  unmatch(matchId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UnmatchMutationResult = NonNullable<Awaited<ReturnType<typeof unmatch>>>
+
+    export type UnmatchMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Unmatch a climber
+ */
+export const useUnmatch = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof unmatch>>, TError,{matchId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof unmatch>>,
+        TError,
+        {matchId: string},
+        TContext
+      > => {
+      return useMutation(getUnmatchMutationOptions(options));
+    }
+
 export const getGetEventsUrl = (params?: GetEventsParams,) => {
   const normalizedParams = new URLSearchParams();
 
@@ -973,6 +1046,77 @@ export function useGetConversations<TData = Awaited<ReturnType<typeof getConvers
 
 
 
+
+export const getCreateConversationUrl = () => {
+
+
+
+
+  return `/api/conversations`
+}
+
+/**
+ * @summary Start (or get) a conversation with a matched climber
+ */
+export const createConversation = async (conversationInput: ConversationInput, options?: Parameters<typeof customFetch>[1]): Promise<Conversation> => {
+
+  return customFetch<Conversation>(getCreateConversationUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(conversationInput)
+  }
+);}
+
+
+
+
+
+export const getCreateConversationMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,{data: BodyType<ConversationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,{data: BodyType<ConversationInput>}, TContext> => {
+
+const mutationKey = ['createConversation'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createConversation>>, {data: BodyType<ConversationInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createConversation(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreateConversationMutationResult = NonNullable<Awaited<ReturnType<typeof createConversation>>>
+    export type CreateConversationMutationBody = BodyType<ConversationInput>
+    export type CreateConversationMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start (or get) a conversation with a matched climber
+ */
+export const useCreateConversation = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createConversation>>, TError,{data: BodyType<ConversationInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createConversation>>,
+        TError,
+        {data: BodyType<ConversationInput>},
+        TContext
+      > => {
+      return useMutation(getCreateConversationMutationOptions(options));
+    }
 
 export const getGetMessagesUrl = (conversationId: string,) => {
 

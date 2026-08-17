@@ -220,8 +220,8 @@ async function main() {
 
   // --- conversations + messages ---------------------------------------------
   await db.insert(schema.conversationsTable).values([
-    { id: "conversation-maya", profileId: "maya-chen", lastMessage: "I’m down for Tuesday if you are.", lastMessageAt: "11:42 am", unreadCount: 2 },
-    { id: "conversation-jonah", profileId: "jonah-wells", lastMessage: "Want to trade belays on Thursday?", lastMessageAt: "Yesterday", unreadCount: 0 },
+    { id: "conversation-maya", participantA: "me", participantB: "maya-chen", lastMessage: "I’m down for Tuesday if you are.", lastMessageAt: "11:42 am", unreadCount: 2 },
+    { id: "conversation-jonah", participantA: "me", participantB: "jonah-wells", lastMessage: "Want to trade belays on Thursday?", lastMessageAt: "Yesterday", unreadCount: 0 },
   ]);
 
   await db.insert(schema.messagesTable).values([

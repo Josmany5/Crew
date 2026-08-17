@@ -131,6 +131,27 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Match"
+  /matches/{matchId}:
+    delete:
+      operationId: unmatch
+      tags: [discovery]
+      summary: Unmatch a climber
+      parameters:
+        - name: matchId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Unmatched
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  ok:
+                    type: boolean
   /events:
     get:
       operationId: getEvents
@@ -223,6 +244,23 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/Conversation"
+    post:
+      operationId: createConversation
+      tags: [messaging]
+      summary: Start (or get) a conversation with a matched climber
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConversationInput"
+      responses:
+        "201":
+          description: Conversation
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Conversation"
   /conversations/{conversationId}/messages:
     get:
       operationId: getMessages
@@ -419,6 +457,11 @@ components:
         gymName: { type: string }
         createdAt: { type: string }
         note: { type: string }
+    ConversationInput:
+      type: object
+      required: [profileId]
+      properties:
+        profileId: { type: string }
     Conversation:
       type: object
       required: [id, profile, lastMessage, lastMessageAt, unreadCount]
@@ -426,8 +469,10 @@ components:
         id: { type: string }
         profile:
           $ref: "#/components/schemas/ClimberProfile"
-        lastMessage: { type: string }
-        lastMessageAt: { type: string }
+        lastMessage:
+          type: [string, "null"]
+        lastMessageAt:
+          type: [string, "null"]
         unreadCount: { type: number }
     Message:
       type: object

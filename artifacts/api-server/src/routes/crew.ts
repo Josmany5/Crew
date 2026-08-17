@@ -15,6 +15,8 @@ import { requireAuth, type AuthedRequest } from "../lib/auth";
 import {
   CreateCheckinBody,
   CreateCheckinResponse,
+  CreateConversationBody,
+  CreateConversationResponse,
   CreateEventBody,
   CreateEventResponse,
   CreateMessageBody,
@@ -34,6 +36,8 @@ import {
   GetMyProfileResponse,
   RsvpToEventParams,
   RsvpToEventResponse,
+  UnmatchParams,
+  UnmatchResponse,
   UpdateMyProfileBody,
   UpdateMyProfileResponse,
 } from "@workspace/api-zod";
@@ -75,9 +79,15 @@ async function ensureProfile(id: string) {
 // ---------------------------------------------------------------------------
 router.get("/discover", async (req: AuthedRequest, res) => {
   const parsed = GetDiscoverProfilesQueryParams.parse(req.query);
-  const rows = await db().select().from(profilesTable);
+  const userId = req.user!.id;
+  const [rows, swipes] = await Promise.all([
+    db().select().from(profilesTable),
+    db().select().from(swipesTable).where(eq(swipesTable.actorId, userId)),
+  ]);
+  const swipedIds = new Set(swipes.map((swipe) => swipe.targetId));
   const result = rows.filter((profile) => {
-    if (profile.id === req.user!.id) return false;
+    if (profile.id === userId) return false;
+    if (swipedIds.has(profile.id)) return false;
     const gymMatches =
       !parsed.gymId ||
       (parsed.gymId === "circuit" && profile.gyms.includes("The Circuit")) ||
@@ -126,6 +136,8 @@ router.patch("/profile", async (req: AuthedRequest, res) => {
 router.post("/swipes", async (req: AuthedRequest, res) => {
   const input = CreateSwipeBody.parse(req.body);
   const userId = req.user!.id;
+  await ensureProfile(userId);
+  await ensureProfile(input.profileId);
 
   const mutual = await db()
     .select()
@@ -149,20 +161,26 @@ router.post("/swipes", async (req: AuthedRequest, res) => {
 
   let match: Record<string, unknown> | null = null;
   if (isMatch) {
-    const profile = await getProfile(input.profileId);
+    const profile = await ensureProfile(input.profileId);
     match = {
       id: `match-${input.profileId}`,
       profile,
       matchedAt: "Just now",
       unreadCount: 0,
     };
-    await db().insert(matchesTable).values({
-      id: `match-${input.profileId}`,
-      profileA: userId,
-      profileB: input.profileId,
-      matchedAt: "Just now",
-      unreadCount: 0,
-    });
+    const [existingMatch] = await db()
+      .select()
+      .from(matchesTable)
+      .where(eq(matchesTable.id, `match-${input.profileId}`));
+    if (!existingMatch) {
+      await db().insert(matchesTable).values({
+        id: `match-${input.profileId}`,
+        profileA: userId,
+        profileB: input.profileId,
+        matchedAt: "Just now",
+        unreadCount: 0,
+      });
+    }
   }
 
   res.json(CreateSwipeResponse.parse({ action: input.action, isMatch, match }));
@@ -183,10 +201,30 @@ router.get("/matches", async (req: AuthedRequest, res) => {
   const result: Array<Record<string, unknown>> = [];
   for (const m of rows) {
     const otherId = m.profileA === userId ? m.profileB : m.profileA;
-    const profile = await getProfile(otherId);
+    const profile = await ensureProfile(otherId);
     result.push({ id: m.id, profile, matchedAt: m.matchedAt, unreadCount: m.unreadCount });
   }
   res.json(GetMatchesResponse.parse(result));
+});
+
+router.delete("/matches/:matchId", async (req: AuthedRequest, res) => {
+  const { matchId } = UnmatchParams.parse(req.params);
+  const userId = req.user!.id;
+  const [match] = await db()
+    .select()
+    .from(matchesTable)
+    .where(eq(matchesTable.id, matchId));
+  if (!match || (match.profileA !== userId && match.profileB !== userId)) {
+    res.status(404).json({ error: "Match not found" });
+    return;
+  }
+  const otherId = match.profileA === userId ? match.profileB : match.profileA;
+  await db().delete(matchesTable).where(eq(matchesTable.id, matchId));
+  const [participantA, participantB] = [userId, otherId].sort();
+  const conversationId = `conversation-${participantA}-${participantB}`;
+  await db().delete(messagesTable).where(eq(messagesTable.conversationId, conversationId));
+  await db().delete(conversationsTable).where(eq(conversationsTable.id, conversationId));
+  res.json(UnmatchResponse.parse({ ok: true }));
 });
 
 // ---------------------------------------------------------------------------
@@ -292,11 +330,21 @@ router.post("/checkins", async (req: AuthedRequest, res) => {
 // ---------------------------------------------------------------------------
 // conversations + messages
 // ---------------------------------------------------------------------------
-router.get("/conversations", async (_req: AuthedRequest, res) => {
-  const rows = await db().select().from(conversationsTable);
+router.get("/conversations", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
+  const rows = await db()
+    .select()
+    .from(conversationsTable)
+    .where(
+      or(
+        eq(conversationsTable.participantA, userId),
+        eq(conversationsTable.participantB, userId),
+      ),
+    );
   const result: Array<Record<string, unknown>> = [];
   for (const conversation of rows) {
-    const profile = await getProfile(conversation.profileId);
+    const otherId = conversation.participantA === userId ? conversation.participantB : conversation.participantA;
+    const profile = await ensureProfile(otherId);
     result.push({
       id: conversation.id,
       profile,
@@ -308,13 +356,62 @@ router.get("/conversations", async (_req: AuthedRequest, res) => {
   res.json(GetConversationsResponse.parse(result));
 });
 
+router.post("/conversations", async (req: AuthedRequest, res) => {
+  const input = CreateConversationBody.parse(req.body);
+  const userId = req.user!.id;
+
+  const [match] = await db()
+    .select()
+    .from(matchesTable)
+    .where(
+      or(
+        and(eq(matchesTable.profileA, userId), eq(matchesTable.profileB, input.profileId)),
+        and(eq(matchesTable.profileA, input.profileId), eq(matchesTable.profileB, userId)),
+      ),
+    );
+  if (!match) {
+    res.status(403).json({ error: "You can only message climbers you've matched with" });
+    return;
+  }
+
+  const [participantA, participantB] = [userId, input.profileId].sort();
+  const conversationId = `conversation-${participantA}-${participantB}`;
+  const [existing] = await db()
+    .select()
+    .from(conversationsTable)
+    .where(eq(conversationsTable.id, conversationId));
+  if (!existing) {
+    await db().insert(conversationsTable).values({
+      id: conversationId,
+      participantA,
+      participantB,
+      lastMessage: null,
+      lastMessageAt: null,
+      unreadCount: 0,
+    });
+  }
+
+  const profile = await ensureProfile(input.profileId);
+  res.status(201).json(
+    CreateConversationResponse.parse({
+      id: conversationId,
+      profile,
+      lastMessage: null,
+      lastMessageAt: null,
+      unreadCount: 0,
+    }),
+  );
+});
+
 router.get("/conversations/:conversationId/messages", async (req: AuthedRequest, res) => {
   const parsed = GetMessagesParams.parse(req.params);
+  const userId = req.user!.id;
   const rows = await db()
     .select()
     .from(messagesTable)
     .where(eq(messagesTable.conversationId, parsed.conversationId));
-  res.json(GetMessagesResponse.parse(rows));
+  const result = rows.map((message) => ({ ...message, isMine: message.senderId === userId }));
+  res.json(GetMessagesResponse.parse(result));
 });
 
 router.post("/conversations/:conversationId/messages", async (req: AuthedRequest, res) => {
@@ -326,7 +423,10 @@ router.post("/conversations/:conversationId/messages", async (req: AuthedRequest
     .select()
     .from(conversationsTable)
     .where(eq(conversationsTable.id, params.conversationId));
-  if (!conversation) {
+  if (
+    !conversation ||
+    (conversation.participantA !== userId && conversation.participantB !== userId)
+  ) {
     res.status(404).json({ error: "Conversation not found" });
     return;
   }

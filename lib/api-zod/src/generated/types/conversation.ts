@@ -10,7 +10,9 @@ import type { ClimberProfile } from './climberProfile';
 export interface Conversation {
   id: string;
   profile: ClimberProfile;
-  lastMessage: string;
-  lastMessageAt: string;
+  /** @nullable */
+  lastMessage: string | null;
+  /** @nullable */
+  lastMessageAt: string | null;
   unreadCount: number;
 }

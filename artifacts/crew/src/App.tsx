@@ -12,13 +12,14 @@ import { supabase, getAccessToken } from '@/lib/supabase';
 import { SignIn } from '@/pages/sign-in';
 import { Home } from '@/pages/home';
 import { Discover } from '@/pages/discover';
+import { Matches } from '@/pages/matches';
 import { Gyms } from '@/pages/gyms';
 import { Events } from '@/pages/events';
 import { Messages } from '@/pages/messages';
 import { Profile } from '@/pages/profile';
 
 function Router() {
-  return <ErrorBoundary resetKey={window.location.pathname}><Switch><Route path="/" component={Home} /><Route path="/discover" component={Discover} /><Route path="/gyms" component={Gyms} /><Route path="/events" component={Events} /><Route path="/messages" component={Messages} /><Route path="/profile" component={Profile} /><Route path="/sign-in"><Redirect to="/discover" /></Route><Route component={NotFound} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary resetKey={window.location.pathname}><Switch><Route path="/" component={Home} /><Route path="/discover" component={Discover} /><Route path="/matches" component={Matches} /><Route path="/gyms" component={Gyms} /><Route path="/events" component={Events} /><Route path="/messages" component={Messages} /><Route path="/profile" component={Profile} /><Route path="/sign-in"><Redirect to="/discover" /></Route><Route component={NotFound} /></Switch></ErrorBoundary>;
 }
 
 function App() {

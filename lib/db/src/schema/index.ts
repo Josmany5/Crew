@@ -160,18 +160,22 @@ export const rsvpsTable = pgTable(
 );
 
 // ---------------------------------------------------------------------------
-// conversations — direct message threads between two matched profiles
+// conversations — shared threads between two matched profiles
 // ---------------------------------------------------------------------------
 export const conversationsTable = pgTable(
   "conversations",
   {
     id: text("id").primaryKey(),
-    profileId: text("profile_id").notNull(),
+    participantA: text("participant_a").notNull(),
+    participantB: text("participant_b").notNull(),
     lastMessage: text("last_message"),
     lastMessageAt: text("last_message_at"),
     unreadCount: integer("unread_count").notNull().default(0),
   },
-  (table) => [index("conversations_profile_idx").on(table.profileId)],
+  (table) => [
+    index("conversations_a_idx").on(table.participantA),
+    index("conversations_b_idx").on(table.participantB),
+  ],
 );
 
 // ---------------------------------------------------------------------------
