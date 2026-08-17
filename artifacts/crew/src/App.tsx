@@ -51,12 +51,12 @@ function App() {
   }
 
   if (!session) {
-    // Signed out: show the landing page first; anything else routes to sign-in.
+    // Signed out: always show the landing page first; sign-in is only via its buttons.
     return <QueryClientProvider client={queryClient}><TooltipProvider>
       <Switch>
         <Route path="/" component={Home} />
         <Route path="/sign-in" component={SignIn} />
-        <Route component={SignIn} />
+        <Route><Redirect to="/" /></Route>
       </Switch>
       <Toaster />
     </TooltipProvider></QueryClientProvider>;

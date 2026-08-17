@@ -3,7 +3,7 @@ import { useState } from 'react';
 import type React from 'react';
 import { Link, useLocation } from 'wouter';
 import { CalendarDays, ChevronRight, Compass, Heart, LogOut, MapPin, MessageCircle, MoreHorizontal, Zap } from 'lucide-react';
-import { useGetMyProfile } from '@workspace/api-client-react';
+import { useGetConversations, useGetMyProfile } from '@workspace/api-client-react';
 import { supabase } from '@/lib/supabase';
 import { Onboarding } from '@/pages/onboarding';
 import { Avatar } from './avatar';
@@ -21,7 +21,9 @@ const navItems = [
 function AppShell({ children }: { children: React.ReactNode }) {
   const [location] = useLocation();
   const { data: profile } = useGetMyProfile();
+  const { data: conversations } = useGetConversations();
   const [mobileOpen, setMobileOpen] = useState(false);
+  const hasUnread = (conversations ?? []).some((conversation) => conversation.unreadCount > 0);
   if (profile && profile.onboarded === false) {
     return <Onboarding />;
   }
@@ -34,7 +36,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
           {navItems.map(({ href, label, icon: Icon }) => (
             <Link data-testid={`link-nav-${label.toLowerCase().replaceAll(' ', '-')}`} key={href} href={href} onClick={() => setMobileOpen(false)} className={`group flex items-center justify-between rounded-xl px-3 py-3 text-[13px] font-bold transition-colors ${location === href ? 'bg-sidebar-accent text-sidebar-accent-foreground' : 'text-sidebar-foreground/60 hover:bg-sidebar-accent/70 hover:text-sidebar-foreground'}`}>
               <span className="flex items-center gap-3"><Icon size={17} strokeWidth={location === href ? 2.5 : 2} />{label}</span>
-              {href === '/messages' && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
+              {href === '/messages' && hasUnread && <span className="h-1.5 w-1.5 rounded-full bg-primary" />}
             </Link>
           ))}
         </nav>
