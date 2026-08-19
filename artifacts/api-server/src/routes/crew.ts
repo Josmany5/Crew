@@ -70,16 +70,36 @@ router.use(requireAuth);
 const image = (id: string) =>
   `https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=80`;
 
+/**
+ * Normalizes a DB profile row into the API shape. Nullable columns (avatar,
+ * bio, location, level, age) and lists must never come back as null or the
+ * response schema rejects them — one bad row would 500 every page for everyone.
+ */
+function profileToApi(profile: Record<string, unknown>): Record<string, unknown> {
+  return {
+    ...profile,
+    age: profile.age ?? 0,
+    location: profile.location ?? "",
+    bio: profile.bio ?? "",
+    avatarUrl: profile.avatarUrl ?? "",
+    climbingLevel: profile.climbingLevel ?? "",
+    disciplines: Array.isArray(profile.disciplines) ? profile.disciplines : [],
+    gyms: Array.isArray(profile.gyms) ? profile.gyms : [],
+    availability: Array.isArray(profile.availability) ? profile.availability : [],
+    gear: Array.isArray(profile.gear) ? profile.gear : [],
+  };
+}
+
 async function getProfile(id: string) {
   const [row] = await db()
     .select()
     .from(profilesTable)
     .where(eq(profilesTable.id, id));
-  return row ?? null;
+  return row ? profileToApi(row) : null;
 }
 
 /** Creates a default profile the first time a new user is seen. */
-async function ensureProfile(id: string) {
+async function ensureProfile(id: string): Promise<Record<string, unknown>> {
   const existing = await getProfile(id);
   if (existing) return existing;
   await db().insert(profilesTable).values({
@@ -91,7 +111,7 @@ async function ensureProfile(id: string) {
     avatarUrl: "",
     climbingLevel: "",
   });
-  return getProfile(id);
+  return (await getProfile(id)) as Record<string, unknown>;
 }
 
 /** Maps a DB post row to the API shape (author + tagged profiles resolved). */
@@ -137,7 +157,7 @@ router.get("/discover", async (req: AuthedRequest, res) => {
       profile.disciplines.includes(parsed.discipline);
     return gymMatches && disciplineMatches;
   });
-  res.json(GetDiscoverProfilesResponse.parse(result));
+  res.json(GetDiscoverProfilesResponse.parse(result.map(profileToApi)));
 });
 
 router.get("/gyms", async (_req: AuthedRequest, res) => {
@@ -274,7 +294,7 @@ router.post("/swipes", async (req: AuthedRequest, res) => {
 router.get("/people", async (req: AuthedRequest, res) => {
   const userId = req.user!.id;
   const rows = await db().select().from(profilesTable);
-  const people = rows.filter((p) => p.id !== userId);
+  const people = rows.filter((p) => p.id !== userId).map(profileToApi);
   res.json(GetPeopleResponse.parse(people));
 });
 
