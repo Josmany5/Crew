@@ -212,6 +212,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/UploadedImage"
+  /profiles/{profileId}:
+    get:
+      operationId: getProfile
+      tags: [discovery]
+      summary: Get a climber's public profile
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: The climber's profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClimberProfile"
   /profiles/{profileId}/posts:
     get:
       operationId: getProfilePosts
@@ -457,6 +475,7 @@ components:
         climbingLevel: { type: string }
         avatarPositionX: { type: number }
         avatarPositionY: { type: number }
+        avatarZoom: { type: number }
     ProfileUpdate:
       type: object
       properties:
@@ -482,6 +501,7 @@ components:
         climbingLevel: { type: string }
         avatarPositionX: { type: number }
         avatarPositionY: { type: number }
+        avatarZoom: { type: number }
     UploadImagePayload:
       type: object
       required: [file]
@@ -492,12 +512,6 @@ components:
         kind:
           type: string
           enum: [post, avatar]
-        cropX:
-          type: number
-        cropY:
-          type: number
-        cropSize:
-          type: number
     UploadedImage:
       type: object
       required: [url]

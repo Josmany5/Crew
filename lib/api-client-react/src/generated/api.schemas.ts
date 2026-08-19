@@ -28,6 +28,7 @@ export interface ClimberProfile {
   climbingLevel?: string;
   avatarPositionX?: number;
   avatarPositionY?: number;
+  avatarZoom?: number;
 }
 
 export interface ProfileUpdate {
@@ -45,6 +46,7 @@ export interface ProfileUpdate {
   climbingLevel?: string;
   avatarPositionX?: number;
   avatarPositionY?: number;
+  avatarZoom?: number;
 }
 
 export type UploadImagePayloadKind = typeof UploadImagePayloadKind[keyof typeof UploadImagePayloadKind];
@@ -58,9 +60,6 @@ export const UploadImagePayloadKind = {
 export interface UploadImagePayload {
   file: Blob;
   kind?: UploadImagePayloadKind;
-  cropX?: number;
-  cropY?: number;
-  cropSize?: number;
 }
 
 export interface UploadedImage {

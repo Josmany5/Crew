@@ -33,7 +33,6 @@ function Onboarding() {
   const [form, setForm] = useState<ProfileUpdate>({});
   const [error, setError] = useState('');
   const [cropSrc, setCropSrc] = useState<string | null>(null);
-  const [cropFile, setCropFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) {
@@ -57,24 +56,16 @@ function Onboarding() {
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
 
-  const pickPhoto = (file: File) => {
-    setCropFile(file);
-    setCropSrc(URL.createObjectURL(file));
-  };
-  const confirmCrop = async (crop: CropSelection) => {
-    if (!cropFile) return;
-    const url = await uploadPublicImage('avatar', cropFile, crop);
-    setCropFile(null);
-    if (cropSrc) URL.revokeObjectURL(cropSrc);
-    setCropSrc(null);
+  const pickPhoto = async (file: File) => {
+    const url = await uploadPublicImage('avatar', file);
     if (!url) { setError('Photo upload failed — you can add one later.'); return; }
-    set({ avatarUrl: url });
+    setCropSrc(url);
   };
-  const cancelCrop = () => {
-    if (cropSrc) URL.revokeObjectURL(cropSrc);
+  const confirmCrop = (crop: CropSelection) => {
+    set({ avatarUrl: cropSrc ?? undefined, avatarPositionX: crop.x, avatarPositionY: crop.y, avatarZoom: crop.zoom });
     setCropSrc(null);
-    setCropFile(null);
   };
+  const cancelCrop = () => setCropSrc(null);
 
   const finish = () => {
     update.mutate(

@@ -10,7 +10,4 @@ import type { UploadImagePayloadKind } from './uploadImagePayloadKind';
 export interface UploadImagePayload {
   file: Blob;
   kind?: UploadImagePayloadKind;
-  cropX?: number;
-  cropY?: number;
-  cropSize?: number;
 }

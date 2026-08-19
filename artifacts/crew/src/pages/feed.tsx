@@ -57,9 +57,8 @@ function Composer() {
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted"><ImageIcon size={13} /> {uploading ? 'Uploading…' : 'Photo'}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} /></label>
         <div className="flex flex-wrap items-center gap-1.5">
-          <Tag size={13} className="text-muted-foreground" />
           {people.slice(0, 12).map((person: ClimberProfile) => (
-            <button key={person.id} type="button" onClick={() => toggleTag(person.id)} className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${tags.includes(person.id) ? 'border-primary bg-primary/15 text-foreground' : 'border-border text-muted-foreground hover:bg-muted'}`}>@{person.name.split(' ')[0]}</button>
+            <button key={person.id} type="button" onClick={() => toggleTag(person.id)} className={`flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-semibold ${tags.includes(person.id) ? 'border-primary bg-primary/15 text-foreground' : 'border-border text-muted-foreground hover:bg-muted'}`}><Avatar profile={person} size="sm" /> {person.name.split(' ')[0]}</button>
           ))}
         </div>
         <button type="button" data-testid="button-post" disabled={busy || (!body.trim() && !imageUrl)} onClick={submit} className="crew-button ml-auto flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground"><Send size={13} /> Post</button>

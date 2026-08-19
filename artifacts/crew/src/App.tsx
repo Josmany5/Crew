@@ -18,9 +18,10 @@ import { Gyms } from '@/pages/gyms';
 import { Events } from '@/pages/events';
 import { Messages } from '@/pages/messages';
 import { Profile } from '@/pages/profile';
+import { ClimberProfile } from '@/pages/climber-profile';
 
 function Router() {
-  return <ErrorBoundary resetKey={window.location.pathname}><Switch><Route path="/" component={Home} /><Route path="/discover" component={Discover} /><Route path="/matches" component={Matches} /><Route path="/feed" component={Feed} /><Route path="/gyms" component={Gyms} /><Route path="/events" component={Events} /><Route path="/messages" component={Messages} /><Route path="/profile" component={Profile} /><Route path="/sign-in"><Redirect to="/discover" /></Route><Route component={NotFound} /></Switch></ErrorBoundary>;
+  return <ErrorBoundary resetKey={window.location.pathname}><Switch><Route path="/" component={Home} /><Route path="/discover" component={Discover} /><Route path="/matches" component={Matches} /><Route path="/feed" component={Feed} /><Route path="/gyms" component={Gyms} /><Route path="/events" component={Events} /><Route path="/messages" component={Messages} /><Route path="/profile" component={Profile} /><Route path="/profile/:profileId" component={ClimberProfile} /><Route path="/sign-in"><Redirect to="/discover" /></Route><Route component={NotFound} /></Switch></ErrorBoundary>;
 }
 
 function App() {

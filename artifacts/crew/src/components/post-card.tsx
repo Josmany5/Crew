@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image as ImageIcon, MapPin, Tag, Trash2 } from 'lucide-react';
+import { Link } from 'wouter';
+import { MapPin, Tag, Trash2 } from 'lucide-react';
 import { getGetFeedQueryKey, getGetProfilePostsQueryKey, useDeletePost, useGetMyProfile } from '@workspace/api-client-react';
 import type { Post } from '@workspace/api-client-react';
 import { Avatar } from '@/components/avatar';
@@ -26,9 +27,9 @@ function PostCard({ post }: { post: Post }) {
   return (
     <article data-testid={`post-${post.id}`} className="crew-card rounded-[22px] p-5 md:p-6">
       <div className="flex items-center gap-3">
-        <Avatar profile={post.author} size="md" />
+        <Link data-testid={`link-author-${post.author.id}`} href={`/profile/${post.author.id}`} aria-label={post.author.name}><Avatar profile={post.author} size="md" /></Link>
         <div className="min-w-0 flex-1">
-          <p className="truncate font-display text-base font-bold">{post.author.name}</p>
+          <Link data-testid={`link-author-name-${post.author.id}`} href={`/profile/${post.author.id}`} className="block truncate font-display text-base font-bold hover:text-primary">{post.author.name}</Link>
           <p className="font-mono text-[10px] text-muted-foreground">{new Date(post.createdAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}</p>
         </div>
         {post.postType === 'checkin' && <span className="flex items-center gap-1.5 rounded-full bg-primary/20 px-3 py-1.5 text-[11px] font-bold text-primary"><MapPin size={12} /> Checked in</span>}
@@ -52,7 +53,7 @@ function PostCard({ post }: { post: Post }) {
       {post.taggedProfiles.length > 0 && (
         <div className="mt-3 flex flex-wrap gap-1.5">
           {post.taggedProfiles.map((person) => (
-            <span key={person.id} className="flex items-center gap-1 rounded-full bg-muted px-2.5 py-1 text-[11px] font-semibold text-muted-foreground"><Tag size={10} /> {person.name}</span>
+            <Link data-testid={`link-tag-${person.id}`} key={person.id} href={`/profile/${person.id}`} className="flex items-center gap-1.5 rounded-full border border-border bg-muted/60 py-1 pl-1 pr-3 text-[11px] font-semibold text-muted-foreground hover:border-primary hover:text-foreground"><Avatar profile={person} size="sm" /><Tag size={10} /> {person.name}</Link>
           ))}
         </div>
       )}

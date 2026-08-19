@@ -25,4 +25,5 @@ export interface ClimberProfile {
   climbingLevel?: string;
   avatarPositionX?: number;
   avatarPositionY?: number;
+  avatarZoom?: number;
 }

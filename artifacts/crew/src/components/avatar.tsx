@@ -8,9 +8,18 @@ function initials(name = 'Crew') {
 
 function Avatar({ profile, size = 'md' }: { profile?: ClimberProfile; size?: 'sm' | 'md' | 'lg' }) {
   const sizes = { sm: 'h-9 w-9 text-[11px]', md: 'h-11 w-11 text-sm', lg: 'h-20 w-20 text-xl' };
-  const position = profile?.avatarPositionX != null && profile?.avatarPositionY != null ? `${profile.avatarPositionX}% ${profile.avatarPositionY}%` : undefined;
+  const posX = profile?.avatarPositionX ?? 50;
+  const posY = profile?.avatarPositionY ?? 50;
+  const zoom = profile?.avatarZoom ?? 1;
   return profile?.avatarUrl ? (
-    <img data-testid={`img-avatar-${profile.id}`} style={position ? { objectPosition: position } : undefined} className={`${sizes[size]} rounded-full object-cover ring-2 ring-background`} src={profile.avatarUrl} alt={profile.name} />
+    <div data-testid={`img-avatar-${profile.id}`} className={`${sizes[size]} relative shrink-0 overflow-hidden rounded-full bg-muted ring-2 ring-background`}>
+      <img
+        src={profile.avatarUrl}
+        alt={profile.name}
+        className="absolute inset-0 h-full w-full"
+        style={{ objectFit: 'cover', objectPosition: `${posX}% ${posY}%`, transform: `scale(${zoom})` }}
+      />
+    </div>
   ) : (
     <div data-testid={`avatar-fallback-${profile?.id ?? 'current'}`} className={`${sizes[size]} flex shrink-0 items-center justify-center rounded-full bg-primary font-display font-bold text-primary-foreground ring-2 ring-background`}>
       {initials(profile?.name)}

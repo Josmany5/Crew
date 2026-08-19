@@ -21,4 +21,5 @@ export interface ProfileUpdate {
   climbingLevel?: string;
   avatarPositionX?: number;
   avatarPositionY?: number;
+  avatarZoom?: number;
 }

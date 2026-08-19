@@ -915,15 +915,6 @@ formData.append(`file`, uploadImagePayload.file);
 if(uploadImagePayload.kind !== undefined) {
  formData.append(`kind`, uploadImagePayload.kind);
  }
-if(uploadImagePayload.cropX !== undefined) {
- formData.append(`cropX`, uploadImagePayload.cropX.toString())
- }
-if(uploadImagePayload.cropY !== undefined) {
- formData.append(`cropY`, uploadImagePayload.cropY.toString())
- }
-if(uploadImagePayload.cropSize !== undefined) {
- formData.append(`cropSize`, uploadImagePayload.cropSize.toString())
- }
 
   return customFetch<UploadedImage>(getUploadImageUrl(),
   {
@@ -982,6 +973,83 @@ export const useUploadImage = <TError = ErrorType<unknown>,
       > => {
       return useMutation(getUploadImageMutationOptions(options));
     }
+
+export const getGetProfileUrl = (profileId: string,) => {
+
+
+
+
+  return `/api/profiles/${profileId}`
+}
+
+/**
+ * @summary Get a climber's public profile
+ */
+export const getProfile = async (profileId: string, options?: Parameters<typeof customFetch>[1]): Promise<ClimberProfile> => {
+
+  return customFetch<ClimberProfile>(getGetProfileUrl(profileId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfileQueryKey = (profileId: string,) => {
+    return [
+    `/api/profiles/${profileId}`
+    ] as const;
+    }
+
+
+export const getGetProfileQueryOptions = <TData = Awaited<ReturnType<typeof getProfile>>, TError = ErrorType<unknown>>(profileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfileQueryKey(profileId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfile>>> = ({ signal }) => getProfile(profileId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: profileId !== null && profileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProfileQueryResult = NonNullable<Awaited<ReturnType<typeof getProfile>>>
+export type GetProfileQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a climber's public profile
+ */
+
+export function useGetProfile<TData = Awaited<ReturnType<typeof getProfile>>, TError = ErrorType<unknown>>(
+ profileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfile>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProfileQueryOptions(profileId,options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
 
 export const getGetProfilePostsUrl = (profileId: string,) => {
 

@@ -2,16 +2,19 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { ZoomIn, ZoomOut } from 'lucide-react';
 
 export interface CropSelection {
-  x: number; // normalized 0..1 from the left of the source image
-  y: number; // normalized 0..1 from the top of the source image
-  size: number; // normalized side length (relative to image width)
+  x: number; // focal position 0..100 (% from left)
+  y: number; // focal position 0..100 (% from top)
+  zoom: number; // 0.5..4 — 1 = fit the shorter side (cover)
 }
 
 const VIEWPORT = 320;
+const MIN_ZOOM = 0.5;
+const MAX_ZOOM = 4;
 
 /**
- * Drag-to-position crop screen shown right after picking a photo.
- * Drag pans the image, scroll/slider zooms. Returns a normalized square crop.
+ * Drag-to-position crop screen shown after a photo is uploaded (server-processed,
+ * so HEIC and huge photos always preview correctly). Drag pans, scroll/slider zooms.
+ * Returns a focal position + zoom used to render the circular avatar.
  */
 function CropModal({ src, onConfirm, onCancel }: { src: string; onConfirm: (crop: CropSelection) => void; onCancel: () => void }) {
   const [img, setImg] = useState<{ w: number; h: number } | null>(null);
@@ -21,7 +24,11 @@ function CropModal({ src, onConfirm, onCancel }: { src: string; onConfirm: (crop
 
   useEffect(() => {
     const image = new Image();
-    image.onload = () => setImg({ w: image.naturalWidth, h: image.naturalHeight });
+    image.onload = () => {
+      setImg({ w: image.naturalWidth, h: image.naturalHeight });
+      setPos({ tx: 0, ty: 0 });
+      setZoom(1);
+    };
     image.src = src;
   }, [src]);
 
@@ -40,10 +47,8 @@ function CropModal({ src, onConfirm, onCancel }: { src: string; onConfirm: (crop
   );
 
   const setZoomAndClamp = (next: number) => {
-    const z = Math.min(4, Math.max(1, next));
+    const z = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, next));
     setZoom(z);
-    setPos((prev) => clampPan(prev.tx, prev.ty));
-    // re-clamp after zoom state lands
     requestAnimationFrame(() => setPos((prev) => clampPan(prev.tx, prev.ty)));
   };
 
@@ -67,11 +72,12 @@ function CropModal({ src, onConfirm, onCancel }: { src: string; onConfirm: (crop
 
   const commit = () => {
     if (!img) return;
-    const effective = (VIEWPORT / Math.min(img.w, img.h)) * zoom;
-    const left = -pos.tx / effective;
-    const top = -pos.ty / effective;
-    const side = VIEWPORT / effective;
-    onConfirm({ x: left / img.w, y: top / img.h, size: side / img.w });
+    const scale0 = VIEWPORT / Math.min(img.w, img.h);
+    const dw = img.w * scale0 * zoom;
+    const dh = img.h * scale0 * zoom;
+    const x = dw > VIEWPORT ? Math.round((-pos.tx / (dw - VIEWPORT)) * 100) : 50;
+    const y = dh > VIEWPORT ? Math.round((-pos.ty / (dh - VIEWPORT)) * 100) : 50;
+    onConfirm({ x: Math.min(100, Math.max(0, x)), y: Math.min(100, Math.max(0, y)), zoom });
   };
 
   const clamped = clampPan(pos.tx, pos.ty);
@@ -109,7 +115,7 @@ function CropModal({ src, onConfirm, onCancel }: { src: string; onConfirm: (crop
 
         <div className="mt-4 flex items-center justify-center gap-3">
           <button type="button" aria-label="Zoom out" onClick={() => setZoomAndClamp(zoom - 0.25)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted"><ZoomOut size={16} /></button>
-          <input data-testid="crop-zoom" type="range" min={1} max={4} step={0.05} value={zoom} onChange={(e) => setZoomAndClamp(Number(e.target.value))} className="w-44 accent-[hsl(var(--primary))]" />
+          <input data-testid="crop-zoom" type="range" min={MIN_ZOOM} max={MAX_ZOOM} step={0.05} value={zoom} onChange={(e) => setZoomAndClamp(Number(e.target.value))} className="w-44 accent-[hsl(var(--primary))]" />
           <button type="button" aria-label="Zoom in" onClick={() => setZoomAndClamp(zoom + 0.25)} className="rounded-lg p-1.5 text-muted-foreground hover:bg-muted"><ZoomIn size={16} /></button>
         </div>
 
