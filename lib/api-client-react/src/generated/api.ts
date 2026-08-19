@@ -27,6 +27,7 @@ import type {
   Conversation,
   ConversationInput,
   DeleteProfile200,
+  DeletedPost,
   EventInput,
   GetDiscoverProfilesParams,
   GetEventsParams,
@@ -764,7 +765,7 @@ export const getCreatePostUrl = () => {
 }
 
 /**
- * @summary Create a feed post
+ * @summary Create a feed post (text, photo, or both)
  */
 export const createPost = async (postInput: PostInput, options?: Parameters<typeof customFetch>[1]): Promise<Post> => {
 
@@ -813,7 +814,7 @@ const {mutation: mutationOptions, request: requestOptions} = options ?
     export type CreatePostMutationError = ErrorType<unknown>
 
     /**
- * @summary Create a feed post
+ * @summary Create a feed post (text, photo, or both)
  */
 export const useCreatePost = <TError = ErrorType<unknown>,
     TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPost>>, TError,{data: BodyType<PostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
@@ -824,6 +825,77 @@ export const useCreatePost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreatePostMutationOptions(options));
+    }
+
+export const getDeletePostUrl = (postId: string,) => {
+
+
+
+
+  return `/api/posts/${postId}`
+}
+
+/**
+ * @summary Delete one of your own posts
+ */
+export const deletePost = async (postId: string, options?: Parameters<typeof customFetch>[1]): Promise<DeletedPost> => {
+
+  return customFetch<DeletedPost>(getDeletePostUrl(postId),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getDeletePostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePost>>, TError,{postId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deletePost>>, TError,{postId: string}, TContext> => {
+
+const mutationKey = ['deletePost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deletePost>>, {postId: string}> = (props) => {
+          const {postId} = props ?? {};
+
+          return  deletePost(postId,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeletePostMutationResult = NonNullable<Awaited<ReturnType<typeof deletePost>>>
+
+    export type DeletePostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Delete one of your own posts
+ */
+export const useDeletePost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deletePost>>, TError,{postId: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deletePost>>,
+        TError,
+        {postId: string},
+        TContext
+      > => {
+      return useMutation(getDeletePostMutationOptions(options));
     }
 
 export const getUploadImageUrl = () => {
@@ -842,6 +914,15 @@ export const uploadImage = async (uploadImagePayload: UploadImagePayload, option
 formData.append(`file`, uploadImagePayload.file);
 if(uploadImagePayload.kind !== undefined) {
  formData.append(`kind`, uploadImagePayload.kind);
+ }
+if(uploadImagePayload.cropX !== undefined) {
+ formData.append(`cropX`, uploadImagePayload.cropX.toString())
+ }
+if(uploadImagePayload.cropY !== undefined) {
+ formData.append(`cropY`, uploadImagePayload.cropY.toString())
+ }
+if(uploadImagePayload.cropSize !== undefined) {
+ formData.append(`cropSize`, uploadImagePayload.cropSize.toString())
  }
 
   return customFetch<UploadedImage>(getUploadImageUrl(),

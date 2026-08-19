@@ -30,6 +30,8 @@ import {
   CreateMessageResponse,
   CreatePostBody,
   CreatePostResponse,
+  DeletePostParams,
+  DeletePostResponse,
   CreateSwipeBody,
   CreateSwipeResponse,
   GetConversationsResponse,
@@ -375,6 +377,27 @@ router.post("/uploads", upload.single("file"), async (req: AuthedRequest, res) =
         .toBuffer();
     }
 
+    // Avatar crops: a normalized square region (0..1) chosen in the crop screen.
+    if (kind === "avatar" && req.body.cropSize) {
+      const x = Number(req.body.cropX ?? 0);
+      const y = Number(req.body.cropY ?? 0);
+      const size = Number(req.body.cropSize);
+      if (Number.isFinite(x) && Number.isFinite(y) && Number.isFinite(size) && size > 0 && size <= 1) {
+        const meta = await sharp(processed).metadata();
+        const w = meta.width ?? 0;
+        const h = meta.height ?? 0;
+        if (w > 0 && h > 0) {
+          const side = Math.round(Math.min(size * w, w, h));
+          const left = Math.min(Math.max(Math.round(x * w), 0), w - side);
+          const top = Math.min(Math.max(Math.round(y * h), 0), h - side);
+          processed = await sharp(processed)
+            .extract({ left, top, width: side, height: side })
+            .jpeg({ quality: 85, progressive: true })
+            .toBuffer();
+        }
+      }
+    }
+
     const path = `public/${req.user!.id}-${Date.now()}.jpg`;
     const { error } = await supabase()
       .storage.from(bucket)
@@ -410,7 +433,7 @@ router.post("/posts", async (req: AuthedRequest, res) => {
   const post = {
     id: `post-${Date.now()}`,
     authorId: userId,
-    body: input.body,
+    body: input.body ?? null,
     imageUrl: input.imageUrl ?? null,
     postType: input.postType ?? "post",
     checkinGymId: null,
@@ -420,6 +443,26 @@ router.post("/posts", async (req: AuthedRequest, res) => {
   };
   await db().insert(postsTable).values(post);
   res.status(201).json(CreatePostResponse.parse(await postToApi(post)));
+});
+
+router.delete("/posts/:postId", async (req: AuthedRequest, res) => {
+  const { postId } = DeletePostParams.parse(req.params);
+  const userId = req.user!.id;
+  const [post] = await db()
+    .select()
+    .from(postsTable)
+    .where(eq(postsTable.id, postId));
+  if (!post || post.authorId !== userId) {
+    res.status(404).json({ error: "Post not found" });
+    return;
+  }
+  // Clean up the stored image so orphan files don't pile up.
+  const match = post.imageUrl?.match(/\/object\/public\/posts\/(.+)$/);
+  if (match) {
+    await supabase().storage.from("posts").remove([match[1]]);
+  }
+  await db().delete(postsTable).where(eq(postsTable.id, postId));
+  res.json(DeletePostResponse.parse({ ok: true }));
 });
 
 router.get("/profiles/:profileId/posts", async (req: AuthedRequest, res) => {

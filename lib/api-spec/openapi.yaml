@@ -162,7 +162,7 @@ paths:
     post:
       operationId: createPost
       tags: [feed]
-      summary: Create a feed post
+      summary: Create a feed post (text, photo, or both)
       requestBody:
         required: true
         content:
@@ -176,6 +176,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Post"
+  /posts/{postId}:
+    delete:
+      operationId: deletePost
+      tags: [feed]
+      summary: Delete one of your own posts
+      parameters:
+        - name: postId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DeletedPost"
   /uploads:
     post:
       operationId: uploadImage
@@ -474,6 +492,12 @@ components:
         kind:
           type: string
           enum: [post, avatar]
+        cropX:
+          type: number
+        cropY:
+          type: number
+        cropSize:
+          type: number
     UploadedImage:
       type: object
       required: [url]
@@ -597,10 +621,9 @@ components:
         createdAt: { type: string }
     PostInput:
       type: object
-      required: [body]
       properties:
         body:
-          type: string
+          type: [string, "null"]
           minLength: 1
         imageUrl:
           type: string
@@ -610,6 +633,11 @@ components:
         postType:
           type: string
           enum: [post, achievement]
+    DeletedPost:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
     ConversationInput:
       type: object
       required: [profileId]

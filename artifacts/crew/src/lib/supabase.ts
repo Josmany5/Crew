@@ -18,14 +18,20 @@ export async function getAccessToken(): Promise<string | null> {
 /**
  * Uploads an image through the API so it is processed server-side:
  * HEIC/HEIF (iPhone) is transcoded to JPEG, EXIF orientation is applied,
- * and it is downscaled. Returns the public URL (or null on failure).
+ * and it is downscaled. For avatars, an optional normalized square crop is
+ * applied. Returns the public URL (or null on failure).
  */
-export async function uploadPublicImage(kind: 'post' | 'avatar', file: File): Promise<string | null> {
+export async function uploadPublicImage(kind: 'post' | 'avatar', file: File, crop?: { x: number; y: number; size: number }): Promise<string | null> {
   try {
     const token = await getAccessToken();
     const form = new FormData();
     form.append('file', file);
     form.append('kind', kind);
+    if (crop) {
+      form.append('cropX', String(crop.x));
+      form.append('cropY', String(crop.y));
+      form.append('cropSize', String(crop.size));
+    }
     const res = await fetch('/api/uploads', {
       method: 'POST',
       headers: token ? { Authorization: `Bearer ${token}` } : {},

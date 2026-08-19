@@ -259,13 +259,13 @@ export const GetFeedResponse = zod.array(GetFeedResponseItem)
 
 
 /**
- * @summary Create a feed post
+ * @summary Create a feed post (text, photo, or both)
  */
 
 
 
 export const CreatePostBody = zod.object({
-  "body": zod.string().min(1),
+  "body": zod.string().min(1).nullish(),
   "imageUrl": zod.string().optional(),
   "taggedProfileIds": zod.array(zod.string()).optional(),
   "postType": zod.enum(['post', 'achievement']).optional()
@@ -322,11 +322,26 @@ export const CreatePostResponse = zod.object({
 
 
 /**
+ * @summary Delete one of your own posts
+ */
+export const DeletePostParams = zod.object({
+  "postId": zod.coerce.string()
+})
+
+export const DeletePostResponse = zod.object({
+  "ok": zod.boolean()
+})
+
+
+/**
  * @summary Upload and process an image (HEIC/JPEG/PNG/WebP → JPEG, auto-oriented, resized)
  */
 export const UploadImageBody = zod.object({
   "file": zod.instanceof(File),
-  "kind": zod.enum(['post', 'avatar']).optional()
+  "kind": zod.enum(['post', 'avatar']).optional(),
+  "cropX": zod.number().optional(),
+  "cropY": zod.number().optional(),
+  "cropSize": zod.number().optional()
 })
 
 export const UploadImageResponse = zod.object({

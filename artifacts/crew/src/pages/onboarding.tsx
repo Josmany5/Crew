@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, Check, Mountain } from 'lucide-react';
 import { getGetMyProfileQueryKey, useGetMyProfile, useUpdateMyProfile } from '@workspace/api-client-react';
 import type { ProfileUpdate } from '@workspace/api-client-react';
 import { ListInput } from '@/components/list-input';
+import { CropModal, type CropSelection } from '@/components/crop-modal';
 import { uploadPublicImage } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
 
@@ -31,6 +32,8 @@ function Onboarding() {
   const [step, setStep] = useState(0);
   const [form, setForm] = useState<ProfileUpdate>({});
   const [error, setError] = useState('');
+  const [cropSrc, setCropSrc] = useState<string | null>(null);
+  const [cropFile, setCropFile] = useState<File | null>(null);
 
   useEffect(() => {
     if (profile && Object.keys(form).length === 0) {
@@ -53,6 +56,25 @@ function Onboarding() {
   const set = (patch: Partial<ProfileUpdate>) => setForm((prev) => ({ ...prev, ...patch }));
   const next = () => setStep((s) => Math.min(s + 1, STEPS.length - 1));
   const back = () => setStep((s) => Math.max(s - 1, 0));
+
+  const pickPhoto = (file: File) => {
+    setCropFile(file);
+    setCropSrc(URL.createObjectURL(file));
+  };
+  const confirmCrop = async (crop: CropSelection) => {
+    if (!cropFile) return;
+    const url = await uploadPublicImage('avatar', cropFile, crop);
+    setCropFile(null);
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    if (!url) { setError('Photo upload failed — you can add one later.'); return; }
+    set({ avatarUrl: url });
+  };
+  const cancelCrop = () => {
+    if (cropSrc) URL.revokeObjectURL(cropSrc);
+    setCropSrc(null);
+    setCropFile(null);
+  };
 
   const finish = () => {
     update.mutate(
@@ -90,7 +112,7 @@ function Onboarding() {
           {step === 2 && <ListInput label="Climbing days & times" items={form.availability ?? []} onChange={(items) => set({ availability: items })} testId="onboarding-availability" suggestions={['Tue evenings', 'Wed evenings', 'Thu after 6', 'Fri evenings', 'Sat mornings', 'Sun afternoons', 'Weekend trips']} />}
           {step === 3 && <ListInput label="Home gyms" items={form.gyms ?? []} onChange={(items) => set({ gyms: items })} testId="onboarding-gyms" suggestions={['The Circuit', 'Portland Rock Gym', 'Montavilla Climbing']} />}
           {step === 4 && <div className="space-y-4"><ListInput label="Gear on hand" items={form.gear ?? []} onChange={(items) => set({ gear: items })} testId="onboarding-gear" suggestions={['60m rope', '70m rope', 'belay device', 'crash pad', 'climbing shoes', 'quickdraws', 'harness', 'chalk bag']} /><Field label="Climbing level"><TextInput value={form.climbingLevel ?? ''} onChange={(v) => set({ climbingLevel: v })} placeholder="V4 / 5.10b" /></Field></div>}
-          {step === 5 && <div className="space-y-4"><label className="block"><span className="mb-1.5 block text-xs font-bold">Profile photo</span><input type="file" accept="image/*" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; const url = await uploadPublicImage('avatar', file); if (!url) { setError('Photo upload failed — you can add one later.'); return; } set({ avatarUrl: url }); }} className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-bold" /><span className="mt-1.5 block text-[11px] text-muted-foreground">Optional — adds a lot of trust.</span></label><label className="block"><span className="mb-1.5 block text-xs font-bold">Bio</span><textarea rows={3} value={form.bio ?? ''} onChange={(e) => set({ bio: e.target.value })} placeholder="Tell people who you are — a good bio means better matches." className="w-full resize-none rounded-xl border border-input bg-background px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-primary" /></label></div>}
+          {step === 5 && <div className="space-y-4"><label className="block"><span className="mb-1.5 block text-xs font-bold">Profile photo</span><input type="file" accept="image/*" onChange={async (event) => { const file = event.target.files?.[0]; if (!file) return; pickPhoto(file); }} className="w-full rounded-xl border border-input bg-background px-3 py-2.5 text-sm file:mr-3 file:rounded-lg file:border-0 file:bg-muted file:px-3 file:py-1.5 file:text-xs file:font-bold" /><span className="mt-1.5 block text-[11px] text-muted-foreground">Optional — drag to center, scroll to zoom, then confirm.</span></label><label className="block"><span className="mb-1.5 block text-xs font-bold">Bio</span><textarea rows={3} value={form.bio ?? ''} onChange={(e) => set({ bio: e.target.value })} placeholder="Tell people who you are — a good bio means better matches." className="w-full resize-none rounded-xl border border-input bg-background px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-primary" /></label></div>}
 
           {error && <p data-testid="onboarding-error" className="mt-4 rounded-xl bg-destructive/10 px-3 py-2.5 text-xs font-semibold text-destructive">{error}</p>}
 
@@ -100,6 +122,7 @@ function Onboarding() {
           </div>
         </div>
       </div>
+      {cropSrc && <CropModal src={cropSrc} onConfirm={(crop) => { confirmCrop(crop); }} onCancel={cancelCrop} />}
     </div>
   );
 }

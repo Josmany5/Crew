@@ -58,6 +58,9 @@ export const UploadImagePayloadKind = {
 export interface UploadImagePayload {
   file: Blob;
   kind?: UploadImagePayloadKind;
+  cropX?: number;
+  cropY?: number;
+  cropSize?: number;
 }
 
 export interface UploadedImage {
@@ -208,11 +211,18 @@ export const PostInputPostType = {
 } as const;
 
 export interface PostInput {
-  /** @minLength 1 */
-  body: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  body?: string | null;
   imageUrl?: string;
   taggedProfileIds?: string[];
   postType?: PostInputPostType;
+}
+
+export interface DeletedPost {
+  ok: boolean;
 }
 
 export interface ConversationInput {

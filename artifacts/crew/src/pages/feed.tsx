@@ -36,10 +36,10 @@ function Composer() {
   const toggleTag = (id: string) => setTags((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
 
   const submit = () => {
-    if (!body.trim()) return;
+    if (!body.trim() && !imageUrl) return;
     setBusy(true);
     createPost.mutate(
-      { data: { body: body.trim(), imageUrl: imageUrl ?? undefined, taggedProfileIds: tags.length ? tags : undefined } },
+      { data: { body: body.trim() ? body.trim() : undefined, imageUrl: imageUrl ?? undefined, taggedProfileIds: tags.length ? tags : undefined } },
       {
         onSuccess: () => { setBody(''); setImageUrl(null); setTags([]); queryClient.invalidateQueries({ queryKey: getGetFeedQueryKey() }); setBusy(false); },
         onError: () => { setBusy(false); },
@@ -50,8 +50,8 @@ function Composer() {
   return (
     <div className="crew-card rounded-[22px] p-5 md:p-6">
       <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Share a send, a plan, or a question</p>
-      <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={2} placeholder="What's happening in your climbing life?" className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
-      {imageUrl && <div className="relative mt-2"><img src={imageUrl} alt="" className="max-h-56 w-full rounded-xl object-cover" /><button type="button" aria-label="Remove photo" onClick={() => setImageUrl(null)} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur hover:bg-background"><X size={14} /></button></div>}
+      <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={2} placeholder={imageUrl ? "Add a caption…" : "What's happening in your climbing life?"} className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
+      {imageUrl && <div className="relative mt-2 overflow-hidden rounded-xl bg-muted/30"><img src={imageUrl} alt="" className="max-h-64 w-full object-contain" /><button type="button" aria-label="Remove photo" onClick={() => setImageUrl(null)} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur hover:bg-background"><X size={14} /></button></div>}
       {uploading && <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Loader2 size={13} className="animate-spin" /> Uploading photo…</p>}
       {uploadError && <p className="mt-2 rounded-xl bg-destructive/10 px-3 py-2.5 text-xs font-semibold text-destructive">{uploadError}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-2">
@@ -62,7 +62,7 @@ function Composer() {
             <button key={person.id} type="button" onClick={() => toggleTag(person.id)} className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold ${tags.includes(person.id) ? 'border-primary bg-primary/15 text-foreground' : 'border-border text-muted-foreground hover:bg-muted'}`}>@{person.name.split(' ')[0]}</button>
           ))}
         </div>
-        <button type="button" data-testid="button-post" disabled={busy || !body.trim()} onClick={submit} className="crew-button ml-auto flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground"><Send size={13} /> Post</button>
+        <button type="button" data-testid="button-post" disabled={busy || (!body.trim() && !imageUrl)} onClick={submit} className="crew-button ml-auto flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground"><Send size={13} /> Post</button>
       </div>
     </div>
   );

@@ -8,8 +8,11 @@
 import type { PostInputPostType } from './postInputPostType';
 
 export interface PostInput {
-  /** @minLength 1 */
-  body: string;
+  /**
+     * @minLength 1
+     * @nullable
+     */
+  body?: string | null;
   imageUrl?: string;
   taggedProfileIds?: string[];
   postType?: PostInputPostType;
