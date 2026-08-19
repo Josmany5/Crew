@@ -155,6 +155,45 @@ export interface Checkin {
   note?: string;
 }
 
+export type PostPostType = typeof PostPostType[keyof typeof PostPostType];
+
+
+export const PostPostType = {
+  post: 'post',
+  checkin: 'checkin',
+  achievement: 'achievement',
+} as const;
+
+export interface Post {
+  id: string;
+  author: ClimberProfile;
+  /** @nullable */
+  body?: string | null;
+  /** @nullable */
+  imageUrl?: string | null;
+  postType: PostPostType;
+  /** @nullable */
+  checkinGymName?: string | null;
+  taggedProfiles: ClimberProfile[];
+  createdAt: string;
+}
+
+export type PostInputPostType = typeof PostInputPostType[keyof typeof PostInputPostType];
+
+
+export const PostInputPostType = {
+  post: 'post',
+  achievement: 'achievement',
+} as const;
+
+export interface PostInput {
+  /** @minLength 1 */
+  body: string;
+  imageUrl?: string;
+  taggedProfileIds?: string[];
+  postType?: PostInputPostType;
+}
+
 export interface ConversationInput {
   profileId: string;
 }

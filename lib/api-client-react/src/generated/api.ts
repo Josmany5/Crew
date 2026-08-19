@@ -35,6 +35,8 @@ import type {
   Match,
   Message,
   MessageInput,
+  Post,
+  PostInput,
   ProfileUpdate,
   SwipeInput,
   SwipeResult,
@@ -662,6 +664,231 @@ export function useGetPendingLikes<TData = Awaited<ReturnType<typeof getPendingL
  ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
 
   const queryOptions = getGetPendingLikesQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getGetFeedUrl = () => {
+
+
+
+
+  return `/api/feed`
+}
+
+/**
+ * @summary Get the social feed
+ */
+export const getFeed = async ( options?: Parameters<typeof customFetch>[1]): Promise<Post[]> => {
+
+  return customFetch<Post[]>(getGetFeedUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetFeedQueryKey = () => {
+    return [
+    `/api/feed`
+    ] as const;
+    }
+
+
+export const getGetFeedQueryOptions = <TData = Awaited<ReturnType<typeof getFeed>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetFeedQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getFeed>>> = ({ signal }) => getFeed({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetFeedQueryResult = NonNullable<Awaited<ReturnType<typeof getFeed>>>
+export type GetFeedQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get the social feed
+ */
+
+export function useGetFeed<TData = Awaited<ReturnType<typeof getFeed>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getFeed>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetFeedQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
+export const getCreatePostUrl = () => {
+
+
+
+
+  return `/api/posts`
+}
+
+/**
+ * @summary Create a feed post
+ */
+export const createPost = async (postInput: PostInput, options?: Parameters<typeof customFetch>[1]): Promise<Post> => {
+
+  return customFetch<Post>(getCreatePostUrl(),
+  {
+    ...options,
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(postInput)
+  }
+);}
+
+
+
+
+
+export const getCreatePostMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPost>>, TError,{data: BodyType<PostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof createPost>>, TError,{data: BodyType<PostInput>}, TContext> => {
+
+const mutationKey = ['createPost'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof createPost>>, {data: BodyType<PostInput>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  createPost(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type CreatePostMutationResult = NonNullable<Awaited<ReturnType<typeof createPost>>>
+    export type CreatePostMutationBody = BodyType<PostInput>
+    export type CreatePostMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Create a feed post
+ */
+export const useCreatePost = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof createPost>>, TError,{data: BodyType<PostInput>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof createPost>>,
+        TError,
+        {data: BodyType<PostInput>},
+        TContext
+      > => {
+      return useMutation(getCreatePostMutationOptions(options));
+    }
+
+export const getGetProfilePostsUrl = (profileId: string,) => {
+
+
+
+
+  return `/api/profiles/${profileId}/posts`
+}
+
+/**
+ * @summary Get a climber's posts
+ */
+export const getProfilePosts = async (profileId: string, options?: Parameters<typeof customFetch>[1]): Promise<Post[]> => {
+
+  return customFetch<Post[]>(getGetProfilePostsUrl(profileId),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetProfilePostsQueryKey = (profileId: string,) => {
+    return [
+    `/api/profiles/${profileId}/posts`
+    ] as const;
+    }
+
+
+export const getGetProfilePostsQueryOptions = <TData = Awaited<ReturnType<typeof getProfilePosts>>, TError = ErrorType<unknown>>(profileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfilePosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetProfilePostsQueryKey(profileId);
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getProfilePosts>>> = ({ signal }) => getProfilePosts(profileId, { signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, enabled: profileId !== null && profileId !== undefined, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getProfilePosts>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetProfilePostsQueryResult = NonNullable<Awaited<ReturnType<typeof getProfilePosts>>>
+export type GetProfilePostsQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Get a climber's posts
+ */
+
+export function useGetProfilePosts<TData = Awaited<ReturnType<typeof getProfilePosts>>, TError = ErrorType<unknown>>(
+ profileId: string, options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getProfilePosts>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetProfilePostsQueryOptions(profileId,options)
 
   const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
 

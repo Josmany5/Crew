@@ -144,6 +144,28 @@ export const eventsTable = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// posts — the social feed (text, photos, check-ins, achievements)
+// ---------------------------------------------------------------------------
+export const postsTable = pgTable(
+  "posts",
+  {
+    id: text("id").primaryKey(),
+    authorId: text("author_id").notNull(),
+    body: text("body"),
+    imageUrl: text("image_url"),
+    postType: text("post_type", { enum: ["post", "checkin", "achievement"] }).notNull().default("post"),
+    checkinGymId: text("checkin_gym_id"),
+    checkinGymName: text("checkin_gym_name"),
+    taggedProfileIds: jsonb("tagged_profile_ids").$type<string[]>().notNull().default([]),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    index("posts_author_idx").on(table.authorId),
+    index("posts_created_idx").on(table.createdAt),
+  ],
+);
+
+// ---------------------------------------------------------------------------
 // rsvps — going / maybe / declined per user per event
 // ---------------------------------------------------------------------------
 export const rsvpsTable = pgTable(

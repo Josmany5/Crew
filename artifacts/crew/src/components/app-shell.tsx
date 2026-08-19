@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import type React from 'react';
 import { Link, useLocation } from 'wouter';
-import { CalendarDays, ChevronRight, Compass, Heart, LogOut, MapPin, MessageCircle, MoreHorizontal, Zap } from 'lucide-react';
+import { CalendarDays, ChevronRight, Compass, Heart, LogOut, MapPin, MessageCircle, MoreHorizontal, Rss, Zap } from 'lucide-react';
 import { useGetConversations, useGetMyProfile } from '@workspace/api-client-react';
 import { supabase } from '@/lib/supabase';
 import { Onboarding } from '@/pages/onboarding';
@@ -13,6 +13,7 @@ import { Logo } from './logo';
 const navItems = [
   { href: '/discover', label: 'Discover', icon: Compass },
   { href: '/matches', label: 'Matches', icon: Heart },
+  { href: '/feed', label: 'Feed', icon: Rss },
   { href: '/gyms', label: 'Gyms', icon: MapPin },
   { href: '/events', label: 'Sessions & trips', icon: CalendarDays },
   { href: '/messages', label: 'Messages', icon: MessageCircle },

@@ -1,5 +1,5 @@
 import { Router, type IRouter } from "express";
-import { and, eq, or } from "drizzle-orm";
+import { and, desc, eq, or } from "drizzle-orm";
 import {
   checkinsTable,
   conversationsTable,
@@ -7,6 +7,7 @@ import {
   matchesTable,
   messagesTable,
   placesTable,
+  postsTable,
   profilesTable,
   rsvpsTable,
   swipesTable,
@@ -24,6 +25,8 @@ import {
   CreateMessageBody,
   CreateMessageParams,
   CreateMessageResponse,
+  CreatePostBody,
+  CreatePostResponse,
   CreateSwipeBody,
   CreateSwipeResponse,
   GetConversationsResponse,
@@ -31,6 +34,7 @@ import {
   GetDiscoverProfilesResponse,
   GetEventsQueryParams,
   GetEventsResponse,
+  GetFeedResponse,
   GetGymsResponse,
   GetMatchesResponse,
   GetMessagesParams,
@@ -38,6 +42,8 @@ import {
   GetMyProfileResponse,
   DeleteProfileResponse,
   GetPendingLikesResponse,
+  GetProfilePostsParams,
+  GetProfilePostsResponse,
   RsvpToEventParams,
   RsvpToEventResponse,
   UnmatchParams,
@@ -76,6 +82,25 @@ async function ensureProfile(id: string) {
     climbingLevel: "",
   });
   return getProfile(id);
+}
+
+/** Maps a DB post row to the API shape (author + tagged profiles resolved). */
+async function postToApi(post: { id: string; authorId: string; body: string | null; imageUrl: string | null; postType: string; checkinGymName: string | null; taggedProfileIds: string[]; createdAt: Date | string }) {
+  const author = await ensureProfile(post.authorId);
+  const taggedProfiles: Array<Record<string, unknown>> = [];
+  for (const id of post.taggedProfileIds ?? []) {
+    taggedProfiles.push(await ensureProfile(id));
+  }
+  return {
+    id: post.id,
+    author,
+    body: post.body,
+    imageUrl: post.imageUrl,
+    postType: post.postType,
+    checkinGymName: post.checkinGymName,
+    taggedProfiles,
+    createdAt: post.createdAt instanceof Date ? post.createdAt.toISOString() : String(post.createdAt),
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -301,6 +326,50 @@ router.delete("/matches/:matchId", async (req: AuthedRequest, res) => {
 });
 
 // ---------------------------------------------------------------------------
+// feed + posts
+// ---------------------------------------------------------------------------
+router.get("/feed", async (_req: AuthedRequest, res) => {
+  const rows = await db()
+    .select()
+    .from(postsTable)
+    .orderBy(desc(postsTable.createdAt));
+  const result: Array<Record<string, unknown>> = [];
+  for (const row of rows) result.push(await postToApi(row));
+  res.json(GetFeedResponse.parse(result));
+});
+
+router.post("/posts", async (req: AuthedRequest, res) => {
+  const input = CreatePostBody.parse(req.body);
+  const userId = req.user!.id;
+  await ensureProfile(userId);
+  const post = {
+    id: `post-${Date.now()}`,
+    authorId: userId,
+    body: input.body,
+    imageUrl: input.imageUrl ?? null,
+    postType: input.postType ?? "post",
+    checkinGymId: null,
+    checkinGymName: null,
+    taggedProfileIds: input.taggedProfileIds ?? [],
+    createdAt: new Date(),
+  };
+  await db().insert(postsTable).values(post);
+  res.status(201).json(CreatePostResponse.parse(await postToApi(post)));
+});
+
+router.get("/profiles/:profileId/posts", async (req: AuthedRequest, res) => {
+  const { profileId } = GetProfilePostsParams.parse(req.params);
+  const rows = await db()
+    .select()
+    .from(postsTable)
+    .where(eq(postsTable.authorId, profileId))
+    .orderBy(desc(postsTable.createdAt));
+  const result: Array<Record<string, unknown>> = [];
+  for (const row of rows) result.push(await postToApi(row));
+  res.json(GetProfilePostsResponse.parse(result));
+});
+
+// ---------------------------------------------------------------------------
 // events
 // ---------------------------------------------------------------------------
 router.get("/events", async (req: AuthedRequest, res) => {
@@ -396,6 +465,16 @@ router.post("/checkins", async (req: AuthedRequest, res) => {
     createdAt: now,
     profileId: userId,
     note: checkin.note || null,
+  });
+  await db().insert(postsTable).values({
+    id: `post-${Date.now()}-${gym.id}`,
+    authorId: userId,
+    body: `Checked in at ${gym.name}`,
+    imageUrl: null,
+    postType: "checkin",
+    checkinGymId: gym.id,
+    checkinGymName: gym.name,
+    taggedProfileIds: [],
   });
   res.status(201).json(CreateCheckinResponse.parse(checkin));
 });

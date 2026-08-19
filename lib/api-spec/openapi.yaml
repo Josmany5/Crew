@@ -144,6 +144,58 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ClimberProfile"
+  /feed:
+    get:
+      operationId: getFeed
+      tags: [feed]
+      summary: Get the social feed
+      responses:
+        "200":
+          description: Feed posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
+  /posts:
+    post:
+      operationId: createPost
+      tags: [feed]
+      summary: Create a feed post
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PostInput"
+      responses:
+        "201":
+          description: Created post
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Post"
+  /profiles/{profileId}/posts:
+    get:
+      operationId: getProfilePosts
+      tags: [feed]
+      summary: Get a climber's posts
+      parameters:
+        - name: profileId
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Profile posts
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Post"
   /matches:
     get:
       operationId: getMatches
@@ -182,7 +234,6 @@ paths:
   /events:
     get:
       operationId: getEvents
-      tags: [events]
       summary: List nearby climbing events
       parameters:
         - name: type
@@ -486,6 +537,42 @@ components:
         gymName: { type: string }
         createdAt: { type: string }
         note: { type: string }
+    Post:
+      type: object
+      required: [id, author, postType, createdAt, taggedProfiles]
+      properties:
+        id: { type: string }
+        author:
+          $ref: "#/components/schemas/ClimberProfile"
+        body:
+          type: [string, "null"]
+        imageUrl:
+          type: [string, "null"]
+        postType:
+          type: string
+          enum: [post, checkin, achievement]
+        checkinGymName:
+          type: [string, "null"]
+        taggedProfiles:
+          type: array
+          items:
+            $ref: "#/components/schemas/ClimberProfile"
+        createdAt: { type: string }
+    PostInput:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+        imageUrl:
+          type: string
+        taggedProfileIds:
+          type: array
+          items: { type: string }
+        postType:
+          type: string
+          enum: [post, achievement]
     ConversationInput:
       type: object
       required: [profileId]

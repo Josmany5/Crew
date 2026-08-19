@@ -193,6 +193,169 @@ export const GetPendingLikesResponse = zod.array(GetPendingLikesResponseItem)
 
 
 /**
+ * @summary Get the social feed
+ */
+export const GetFeedResponseItem = zod.object({
+  "id": zod.string(),
+  "author": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "onboarded": zod.boolean().optional(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+}),
+  "body": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "postType": zod.enum(['post', 'checkin', 'achievement']),
+  "checkinGymName": zod.string().nullish(),
+  "taggedProfiles": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "onboarded": zod.boolean().optional(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+})),
+  "createdAt": zod.string()
+})
+export const GetFeedResponse = zod.array(GetFeedResponseItem)
+
+
+/**
+ * @summary Create a feed post
+ */
+
+
+
+export const CreatePostBody = zod.object({
+  "body": zod.string().min(1),
+  "imageUrl": zod.string().optional(),
+  "taggedProfileIds": zod.array(zod.string()).optional(),
+  "postType": zod.enum(['post', 'achievement']).optional()
+})
+
+export const CreatePostResponse = zod.object({
+  "id": zod.string(),
+  "author": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "onboarded": zod.boolean().optional(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+}),
+  "body": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "postType": zod.enum(['post', 'checkin', 'achievement']),
+  "checkinGymName": zod.string().nullish(),
+  "taggedProfiles": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "onboarded": zod.boolean().optional(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+})),
+  "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Get a climber's posts
+ */
+export const GetProfilePostsParams = zod.object({
+  "profileId": zod.coerce.string()
+})
+
+export const GetProfilePostsResponseItem = zod.object({
+  "id": zod.string(),
+  "author": zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "onboarded": zod.boolean().optional(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+}),
+  "body": zod.string().nullish(),
+  "imageUrl": zod.string().nullish(),
+  "postType": zod.enum(['post', 'checkin', 'achievement']),
+  "checkinGymName": zod.string().nullish(),
+  "taggedProfiles": zod.array(zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "onboarded": zod.boolean().optional(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional()
+})),
+  "createdAt": zod.string()
+})
+export const GetProfilePostsResponse = zod.array(GetProfilePostsResponseItem)
+
+
+/**
  * @summary Get current matches
  */
 export const GetMatchesResponseItem = zod.object({
