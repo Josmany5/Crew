@@ -41,6 +41,7 @@ import type {
   ProfileUpdate,
   SwipeInput,
   SwipeResult,
+  SwipesCleared,
   Unmatch200,
   UploadImagePayload,
   UploadedImage
@@ -531,6 +532,83 @@ export const useDeleteProfile = <TError = ErrorType<unknown>,
       return useMutation(getDeleteProfileMutationOptions(options));
     }
 
+export const getGetPeopleUrl = () => {
+
+
+
+
+  return `/api/people`
+}
+
+/**
+ * @summary Everyone you can tag or mention (all profiles except you)
+ */
+export const getPeople = async ( options?: Parameters<typeof customFetch>[1]): Promise<ClimberProfile[]> => {
+
+  return customFetch<ClimberProfile[]>(getGetPeopleUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getGetPeopleQueryKey = () => {
+    return [
+    `/api/people`
+    ] as const;
+    }
+
+
+export const getGetPeopleQueryOptions = <TData = Awaited<ReturnType<typeof getPeople>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPeople>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getGetPeopleQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof getPeople>>> = ({ signal }) => getPeople({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof getPeople>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type GetPeopleQueryResult = NonNullable<Awaited<ReturnType<typeof getPeople>>>
+export type GetPeopleQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary Everyone you can tag or mention (all profiles except you)
+ */
+
+export function useGetPeople<TData = Awaited<ReturnType<typeof getPeople>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof getPeople>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getGetPeopleQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return withQueryKey(query, queryOptions.queryKey);
+}
+
+
+
+
+
+
+
 export const getCreateSwipeUrl = () => {
 
 
@@ -678,6 +756,77 @@ export function useGetPendingLikes<TData = Awaited<ReturnType<typeof getPendingL
 
 
 
+
+export const getClearSwipesUrl = () => {
+
+
+
+
+  return `/api/swipes`
+}
+
+/**
+ * @summary Start over — clear your swipes and matches
+ */
+export const clearSwipes = async ( options?: Parameters<typeof customFetch>[1]): Promise<SwipesCleared> => {
+
+  return customFetch<SwipesCleared>(getClearSwipesUrl(),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+
+export const getClearSwipesMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSwipes>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof clearSwipes>>, TError,void, TContext> => {
+
+const mutationKey = ['clearSwipes'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof clearSwipes>>, void> = () => {
+
+
+          return  clearSwipes(requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type ClearSwipesMutationResult = NonNullable<Awaited<ReturnType<typeof clearSwipes>>>
+
+    export type ClearSwipesMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Start over — clear your swipes and matches
+ */
+export const useClearSwipes = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof clearSwipes>>, TError,void, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof clearSwipes>>,
+        TError,
+        void,
+        TContext
+      > => {
+      return useMutation(getClearSwipesMutationOptions(options));
+    }
 
 export const getGetFeedUrl = () => {
 

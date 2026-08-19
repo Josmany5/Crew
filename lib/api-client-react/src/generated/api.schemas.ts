@@ -224,6 +224,10 @@ export interface DeletedPost {
   ok: boolean;
 }
 
+export interface SwipesCleared {
+  ok: boolean;
+}
+
 export interface ConversationInput {
   profileId: string;
 }

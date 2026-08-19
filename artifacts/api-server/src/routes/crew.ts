@@ -34,6 +34,8 @@ import {
   DeletePostResponse,
   CreateSwipeBody,
   CreateSwipeResponse,
+  ClearSwipesResponse,
+  GetPeopleResponse,
   GetConversationsResponse,
   GetDiscoverProfilesQueryParams,
   GetDiscoverProfilesResponse,
@@ -269,6 +271,13 @@ router.post("/swipes", async (req: AuthedRequest, res) => {
   res.json(CreateSwipeResponse.parse({ action: input.action, isMatch, match }));
 });
 
+router.get("/people", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
+  const rows = await db().select().from(profilesTable);
+  const people = rows.filter((p) => p.id !== userId);
+  res.json(GetPeopleResponse.parse(people));
+});
+
 router.get("/swipes", async (req: AuthedRequest, res) => {
   const userId = req.user!.id;
   const [swipes, allMatches] = await Promise.all([
@@ -290,6 +299,24 @@ router.get("/swipes", async (req: AuthedRequest, res) => {
     result.push(profile);
   }
   res.json(GetPendingLikesResponse.parse(result));
+});
+
+router.delete("/swipes", async (req: AuthedRequest, res) => {
+  const userId = req.user!.id;
+  await db().delete(swipesTable).where(eq(swipesTable.actorId, userId));
+  const matches = await db()
+    .select()
+    .from(matchesTable)
+    .where(or(eq(matchesTable.profileA, userId), eq(matchesTable.profileB, userId)));
+  for (const m of matches) {
+    const otherId = m.profileA === userId ? m.profileB : m.profileA;
+    const [participantA, participantB] = [userId, otherId].sort();
+    const conversationId = `conversation-${participantA}-${participantB}`;
+    await db().delete(messagesTable).where(eq(messagesTable.conversationId, conversationId));
+    await db().delete(conversationsTable).where(eq(conversationsTable.id, conversationId));
+    await db().delete(matchesTable).where(eq(matchesTable.id, m.id));
+  }
+  res.json(ClearSwipesResponse.parse({ ok: true }));
 });
 
 router.get("/matches", async (req: AuthedRequest, res) => {

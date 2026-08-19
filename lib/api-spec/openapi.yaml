@@ -113,6 +113,20 @@ paths:
                 properties:
                   ok:
                     type: boolean
+  /people:
+    get:
+      operationId: getPeople
+      tags: [discovery]
+      summary: Everyone you can tag or mention (all profiles except you)
+      responses:
+        "200":
+          description: People
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ClimberProfile"
   /swipes:
     post:
       operationId: createSwipe
@@ -144,6 +158,17 @@ paths:
                 type: array
                 items:
                   $ref: "#/components/schemas/ClimberProfile"
+    delete:
+      operationId: clearSwipes
+      tags: [discovery]
+      summary: Start over — clear your swipes and matches
+      responses:
+        "200":
+          description: Cleared
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SwipesCleared"
   /feed:
     get:
       operationId: getFeed
@@ -648,6 +673,11 @@ components:
           type: string
           enum: [post, achievement]
     DeletedPost:
+      type: object
+      required: [ok]
+      properties:
+        ok: { type: boolean }
+    SwipesCleared:
       type: object
       required: [ok]
       properties:

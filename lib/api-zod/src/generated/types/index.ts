@@ -37,6 +37,7 @@ export * from './profileUpdate';
 export * from './swipeInput';
 export * from './swipeInputAction';
 export * from './swipeResult';
+export * from './swipesCleared';
 export * from './unmatch200';
 export * from './uploadedImage';
 export * from './uploadImagePayload';

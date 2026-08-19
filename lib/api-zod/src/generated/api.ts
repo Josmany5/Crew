@@ -144,6 +144,33 @@ export const DeleteProfileResponse = zod.object({
 
 
 /**
+ * @summary Everyone you can tag or mention (all profiles except you)
+ */
+export const GetPeopleResponseItem = zod.object({
+  "id": zod.string(),
+  "name": zod.string(),
+  "age": zod.number(),
+  "location": zod.string(),
+  "bio": zod.string(),
+  "avatarUrl": zod.string(),
+  "onboarded": zod.boolean().optional(),
+  "disciplines": zod.array(zod.string()),
+  "gyms": zod.array(zod.string()),
+  "availability": zod.array(zod.string()),
+  "matchPercent": zod.number(),
+  "openToDating": zod.boolean(),
+  "gear": zod.array(zod.string()),
+  "verified": zod.boolean(),
+  "lastActive": zod.string().optional(),
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional(),
+  "avatarZoom": zod.number().optional()
+})
+export const GetPeopleResponse = zod.array(GetPeopleResponseItem)
+
+
+/**
  * @summary Like or pass on a climber
  */
 export const CreateSwipeBody = zod.object({
@@ -208,6 +235,14 @@ export const GetPendingLikesResponseItem = zod.object({
   "avatarZoom": zod.number().optional()
 })
 export const GetPendingLikesResponse = zod.array(GetPendingLikesResponseItem)
+
+
+/**
+ * @summary Start over — clear your swipes and matches
+ */
+export const ClearSwipesResponse = zod.object({
+  "ok": zod.boolean()
+})
 
 
 /**

@@ -1,8 +1,8 @@
 // Extracted from App.tsx
 import { useMemo, useState } from 'react';
 import { Link } from 'wouter';
-import { Compass, Heart, MapPin, MessageCircle, ShieldCheck, TentTree, X } from 'lucide-react';
-import { getGetDiscoverProfilesQueryKey, useCreateSwipe, useGetDiscoverProfiles, useGetGyms, useGetMatches } from '@workspace/api-client-react';
+import { Compass, Heart, MapPin, MessageCircle, MoreHorizontal, ShieldCheck, TentTree, X } from 'lucide-react';
+import { getGetDiscoverProfilesQueryKey, useClearSwipes, useCreateSwipe, useGetDiscoverProfiles, useGetGyms, useGetMatches } from '@workspace/api-client-react';
 import type { ClimberProfile, Gym, Match } from '@workspace/api-client-react';
 import { AppShell } from '@/components/app-shell';
 import { Avatar } from '@/components/avatar';
@@ -19,22 +19,93 @@ function Discover() {
   const profilesQuery = useGetDiscoverProfiles(params, { query: { queryKey: getGetDiscoverProfilesQueryKey(params) } });
   const gymsQuery = useGetGyms();
   const swipe = useCreateSwipe();
+  const clearSwipes = useClearSwipes();
+  const restart = () => {
+    clearSwipes.mutate(undefined, {
+      onSuccess: () => { setIndex(0); setGymId(''); setDiscipline('any'); profilesQuery.refetch(); setNotice('Fresh start — here’s everyone again.'); setTimeout(() => setNotice(''), 3500); },
+      onError: () => { setNotice('Could not reset — try again.'); setTimeout(() => setNotice(''), 3000); },
+    });
+  };
   const profiles = profilesQuery.data ?? [];
   const current = profiles[index];
   const act = (action: 'like' | 'pass') => {
     if (!current) return;
     swipe.mutate({ data: { profileId: current.id, action } }, { onSuccess: (result) => { setIndex((value) => value + 1); setNotice(result.isMatch ? `It’s a match with ${result.match?.profile.name ?? current.name}.` : action === 'like' ? `You liked ${current.name} — if they like you back, you'll match.` : 'On to the next one.'); setTimeout(() => setNotice(''), 3500); }, onError: () => { setNotice('Could not save that choice.'); setTimeout(() => setNotice(''), 3000); } });
   };
-  /*
-  return <AppShell><div className="mx-auto max-w-[1200px] px-5 py-8 md:px-10 md:py-12"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-primary">Make a plan</p><h1 data-testid="heading-discover" className="mt-2 font-display text-4xl font-bold tracking-[-.05em] md:text-5xl">People you’ll actually climb with.</h1><p className="mt-3 text-sm text-muted-foreground">Based on your gyms, pace, and the kind of day you want.</p></div><Link data-testid="link-discover-events" href="/events" className="text-sm font-bold text-muted-foreground hover:text-foreground">Looking for a group? <span className="text-primary underline underline-offset-4">See sessions</span></Link></div>
-    <div className="mt-8 flex flex-wrap gap-2"><select data-testid="select-filter-gym" value={gymId} onChange={(e) => { setGymId(e.target.value); setIndex(0); }} className="rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary">{<option value="">All nearby gyms</option>}{(gymsQuery.data ?? []).map((gym) => <option value={gym.id} key={gym.id}>{gym.name}</option>)}</select>{['any', 'bouldering', 'ropes', 'outdoor'].map((item) => <button data-testid={`button-filter-${item}`} key={item} onClick={() => { setDiscipline(item); setIndex(0); }} className={`rounded-full border px-4 py-2.5 text-xs font-bold capitalize transition-colors ${discipline === item ? 'border-sidebar bg-sidebar text-sidebar-foreground' : 'border-border bg-card text-muted-foreground hover:border-sidebar'}`}>{item === 'any' ? 'Any style' : item}</button>)}</div>
-     <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,680px)_1fr]">{profilesQuery.isLoading ? <LoadingState /> : profilesQuery.isError ? <ErrorState onRetry={() => profilesQuery.refetch()} /> : !current ? <EmptyDiscover onReset={() => { setIndex(0); setGymId(''); setDiscipline('any'); }} /> : <div className="relative"><div data-testid={`card-profile-${current.id}`} className="crew-card relative overflow-hidden rounded-[28px]"><div className="grid min-h-[500px] md:grid-cols-[.92fr_1.08fr]"><Link data-testid={`link-discover-photo-${current.id}`} href={`/profile/${current.id}`} className="relative block min-h-[290px] overflow-hidden bg-muted/40">{current.avatarUrl && <img src={current.avatarUrl} alt={current.name} className="absolute inset-0 h-full w-full object-contain" />}<div className="absolute inset-0 bg-gradient-to-t from-sidebar/80 via-transparent to-transparent" /><div className="absolute bottom-5 left-5 flex items-center gap-2 rounded-full bg-sidebar/80 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-sidebar-foreground backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-primary" /> active {current.lastActive ? `· ${current.lastActive}` : ''}</div></Link><div className="flex flex-col justify-between p-6 md:p-8"><div><div className="flex items-start justify-between gap-4"><div><div className="flex items-center gap-2"><Link data-testid={`link-discover-name-${current.id}`} href={`/profile/${current.id}`} className="hover:text-primary"><h2 data-testid={`text-profile-name-${current.id}`} className="font-display text-3xl font-bold tracking-[-.05em]">{current.name}, {current.age}</h2></Link>{current.verified && <ShieldCheck data-testid={`status-verified-${current.id}`} className="text-primary" size={18} fill="currentColor" stroke="hsl(var(--card))" />}</div><p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin size={14} />{current.location}</p></div><div className="rounded-xl bg-primary/20 px-3 py-2 text-center"><strong data-testid={`text-match-percent-${current.id}`} className="block font-display text-2xl font-bold text-foreground">{current.matchPercent}%</strong><span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">aligned</span></div></div><p className="mt-7 text-[15px] leading-relaxed text-foreground/80">{current.bio}</p><div className="mt-6 flex flex-wrap gap-2">{current.disciplines.map((tag) => <span key={tag} className="rounded-full bg-muted px-3 py-1.5 text-xs font-bold capitalize">{tag}</span>)}{current.openToDating && <span className="rounded-full border border-secondary/60 px-3 py-1.5 text-xs font-bold text-secondary-foreground">open to more</span>}</div><div className="mt-7 grid grid-cols-2 gap-4 border-t border-border pt-5"><div><span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Usually climbs</span><p className="mt-2 text-sm font-bold">{current.gyms.join(' · ')}</p></div><div><span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Free next</span><p className="mt-2 text-sm font-bold">{current.availability.join(' · ')}</p></div></div></div><div><div className="mb-5 flex items-center gap-2 text-xs text-muted-foreground"><TentTree size={15} className="text-secondary" /><span>Brings {current.gear.join(', ')}</span></div><div className="flex items-center gap-3"><button data-testid={`button-pass-${current.id}`} disabled={swipe.isPending} onClick={() => act('pass')} className="crew-button flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:border-destructive hover:text-destructive"><X size={20} /></button><button data-testid={`button-like-${current.id}`} disabled={swipe.isPending} onClick={() => act('like')} className="crew-button flex-1 rounded-full bg-sidebar py-3.5 text-sm font-extrabold text-sidebar-foreground hover:bg-sidebar/90"><Heart className="mr-2 inline text-primary" size={17} fill="currentColor" />I’d climb with them</button><button data-testid={`button-profile-more-${current.id}`} className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground"><MoreHorizontal size={19} /></button></div></div></div></div></div><div className="hidden lg:block"><MatchAside /></div></div></div></div>{notice && <PageNotice message={notice} />}</AppShell>;
-  */
-  return <AppShell><div className="mx-auto max-w-[1200px] px-5 py-8 md:px-10 md:py-12"><div className="flex flex-col justify-between gap-5 md:flex-row md:items-end"><div><p className="font-mono text-[10px] uppercase tracking-[.2em] text-primary">Make a plan</p><h1 data-testid="heading-discover" className="mt-2 font-display text-4xl font-bold tracking-[-.05em] md:text-5xl">People you’ll actually climb with.</h1><p className="mt-3 text-sm text-muted-foreground">Based on your gyms, pace, and the kind of day you want.</p></div><Link data-testid="link-discover-events" href="/events" className="text-sm font-bold text-muted-foreground hover:text-foreground">Looking for a group? <span className="text-primary underline underline-offset-4">See sessions</span></Link></div><div className="mt-8 flex flex-wrap gap-2">{['any', 'bouldering', 'ropes', 'outdoor'].map((item) => <button data-testid={`button-filter-${item}`} key={item} onClick={() => { setDiscipline(item); setIndex(0); }} className={`rounded-full border px-4 py-2.5 text-xs font-bold capitalize ${discipline === item ? 'border-sidebar bg-sidebar text-sidebar-foreground' : 'border-border bg-card text-muted-foreground'}`}>{item === 'any' ? 'Any style' : item}</button>)}</div><div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,680px)_1fr]">{profilesQuery.isLoading ? <LoadingState /> : profilesQuery.isError ? <ErrorState onRetry={() => profilesQuery.refetch()} /> : !current ? <EmptyDiscover onReset={() => { setIndex(0); setGymId(''); setDiscipline('any'); }} /> : <div data-testid={`card-profile-${current.id}`} className="crew-card overflow-hidden rounded-[28px]"><div className="h-64 bg-secondary/50" style={current.avatarUrl ? { backgroundImage: `url(${current.avatarUrl})`, backgroundSize: 'cover', backgroundPosition: 'center' } : undefined} /><div className="p-6"><div className="flex items-start justify-between gap-4"><div><h2 data-testid={`text-profile-name-${current.id}`} className="font-display text-3xl font-bold">{current.name}, {current.age}</h2><p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin size={14} />{current.location}</p></div><strong data-testid={`text-match-percent-${current.id}`} className="rounded-xl bg-primary/25 px-3 py-2 font-display text-2xl">{current.matchPercent}%</strong></div><p className="mt-6 text-sm leading-relaxed text-foreground/80">{current.bio}</p><div className="mt-5 flex flex-wrap gap-2">{current.disciplines.map((tag) => <span key={tag} className="rounded-full bg-muted px-3 py-1.5 text-xs font-bold capitalize">{tag}</span>)}</div><p className="mt-6 text-xs text-muted-foreground">Usually at {current.gyms.join(' · ')} · Free {current.availability.join(' · ')}</p><div className="mt-7 flex gap-3"><button data-testid={`button-pass-${current.id}`} onClick={() => act('pass')} className="crew-button flex h-12 w-12 items-center justify-center rounded-full border border-border"><X size={20} /></button><button data-testid={`button-like-${current.id}`} onClick={() => act('like')} className="crew-button flex-1 rounded-full bg-sidebar py-3.5 text-sm font-extrabold text-sidebar-foreground"><Heart className="mr-2 inline text-primary" size={17} fill="currentColor" />I’d climb with them</button></div></div></div>}<div className="hidden lg:block"><MatchAside /></div></div></div>{notice && <PageNotice message={notice} />}</AppShell>;
+
+  return (
+    <AppShell>
+      <div className="mx-auto max-w-[1200px] px-5 py-8 md:px-10 md:py-12">
+        <div className="flex flex-col justify-between gap-5 md:flex-row md:items-end">
+          <div>
+            <p className="font-mono text-[10px] uppercase tracking-[.2em] text-primary">Make a plan</p>
+            <h1 data-testid="heading-discover" className="mt-2 font-display text-4xl font-bold tracking-[-.05em] md:text-5xl">People you’ll actually climb with.</h1>
+            <p className="mt-3 text-sm text-muted-foreground">Based on your gyms, pace, and the kind of day you want.</p>
+          </div>
+          <Link data-testid="link-discover-events" href="/events" className="text-sm font-bold text-muted-foreground hover:text-foreground">Looking for a group? <span className="text-primary underline underline-offset-4">See sessions</span></Link>
+        </div>
+
+        <div className="mt-8 flex flex-wrap gap-2">
+          <select data-testid="select-filter-gym" value={gymId} onChange={(e) => { setGymId(e.target.value); setIndex(0); }} className="rounded-full border border-border bg-card px-4 py-2.5 text-xs font-bold outline-none focus:ring-2 focus:ring-primary">
+            <option value="">All nearby gyms</option>
+            {(gymsQuery.data ?? []).map((gym) => <option value={gym.id} key={gym.id}>{gym.name}</option>)}
+          </select>
+          {['any', 'bouldering', 'ropes', 'outdoor'].map((item) => (
+            <button data-testid={`button-filter-${item}`} key={item} onClick={() => { setDiscipline(item); setIndex(0); }} className={`rounded-full border px-4 py-2.5 text-xs font-bold capitalize transition-colors ${discipline === item ? 'border-sidebar bg-sidebar text-sidebar-foreground' : 'border-border bg-card text-muted-foreground hover:border-sidebar'}`}>{item === 'any' ? 'Any style' : item}</button>
+          ))}
+        </div>
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,680px)_1fr]">
+          {profilesQuery.isLoading ? <LoadingState /> : profilesQuery.isError ? <ErrorState onRetry={() => profilesQuery.refetch()} /> : !current ? <EmptyDiscover onReset={() => { setIndex(0); setGymId(''); setDiscipline('any'); }} onRestart={restart} restarting={clearSwipes.isPending} /> : (
+            <div className="relative">
+              <div data-testid={`card-profile-${current.id}`} className="crew-card relative overflow-hidden rounded-[28px]">
+                <div className="grid min-h-[500px] md:grid-cols-[.92fr_1.08fr]">
+                  <Link data-testid={`link-discover-photo-${current.id}`} href={`/profile/${current.id}`} className="relative block min-h-[290px] overflow-hidden bg-muted/40">
+                    {current.avatarUrl && <img src={current.avatarUrl} alt={current.name} className="absolute inset-0 h-full w-full object-contain" />}
+                    <div className="absolute inset-0 bg-gradient-to-t from-sidebar/80 via-transparent to-transparent" />
+                    <div className="absolute bottom-5 left-5 flex items-center gap-2 rounded-full bg-sidebar/80 px-3 py-1.5 font-mono text-[10px] uppercase tracking-wider text-sidebar-foreground backdrop-blur"><span className="h-1.5 w-1.5 rounded-full bg-primary" /> active {current.lastActive ? `· ${current.lastActive}` : ''}</div>
+                  </Link>
+                  <div className="flex flex-col justify-between p-6 md:p-8">
+                    <div>
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <Link data-testid={`link-discover-name-${current.id}`} href={`/profile/${current.id}`} className="hover:text-primary"><h2 data-testid={`text-profile-name-${current.id}`} className="font-display text-3xl font-bold tracking-[-.05em]">{current.name}, {current.age}</h2></Link>
+                            {current.verified && <ShieldCheck data-testid={`status-verified-${current.id}`} className="text-primary" size={18} fill="currentColor" stroke="hsl(var(--card))" />}
+                          </div>
+                          <p className="mt-1 flex items-center gap-1.5 text-sm text-muted-foreground"><MapPin size={14} />{current.location}</p>
+                        </div>
+                        <div className="rounded-xl bg-primary/20 px-3 py-2 text-center"><strong data-testid={`text-match-percent-${current.id}`} className="block font-display text-2xl font-bold text-foreground">{current.matchPercent}%</strong><span className="font-mono text-[9px] uppercase tracking-wider text-muted-foreground">aligned</span></div>
+                      </div>
+                      <p className="mt-7 text-[15px] leading-relaxed text-foreground/80">{current.bio}</p>
+                      <div className="mt-6 flex flex-wrap gap-2">{current.disciplines.map((tag) => <span key={tag} className="rounded-full bg-muted px-3 py-1.5 text-xs font-bold capitalize">{tag}</span>)}{current.openToDating && <span className="rounded-full border border-secondary/60 px-3 py-1.5 text-xs font-bold text-secondary-foreground">open to more</span>}</div>
+                      <div className="mt-7 grid grid-cols-2 gap-4 border-t border-border pt-5">
+                        <div><span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Usually climbs</span><p className="mt-2 text-sm font-bold">{current.gyms.join(' · ')}</p></div>
+                        <div><span className="font-mono text-[10px] uppercase tracking-wider text-muted-foreground">Free next</span><p className="mt-2 text-sm font-bold">{current.availability.join(' · ')}</p></div>
+                      </div>
+                    </div>
+                    <div>
+                      <div className="mb-5 flex items-center gap-2 text-xs text-muted-foreground"><TentTree size={15} className="text-secondary" /><span>Brings {current.gear.join(', ')}</span></div>
+                      <div className="flex items-center gap-3">
+                        <button data-testid={`button-pass-${current.id}`} disabled={swipe.isPending} onClick={() => act('pass')} className="crew-button flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:border-destructive hover:text-destructive"><X size={20} /></button>
+                        <button data-testid={`button-like-${current.id}`} disabled={swipe.isPending} onClick={() => act('like')} className="crew-button flex-1 rounded-full bg-sidebar py-3.5 text-sm font-extrabold text-sidebar-foreground hover:bg-sidebar/90"><Heart className="mr-2 inline text-primary" size={17} fill="currentColor" />I’d climb with them</button>
+                        <button data-testid={`button-profile-more-${current.id}`} className="flex h-12 w-12 items-center justify-center rounded-full border border-border bg-card text-muted-foreground hover:text-foreground"><MoreHorizontal size={19} /></button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <div className="hidden lg:block"><MatchAside /></div>
+        </div>
+      </div>
+      {notice && <PageNotice message={notice} />}
+    </AppShell>
+  );
 }
 
-function EmptyDiscover({ onReset }: { onReset: () => void }) {
-  return <div data-testid="empty-discover" className="crew-card flex min-h-[500px] flex-col items-center justify-center rounded-[28px] p-8 text-center"><div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/25 text-primary-foreground"><Compass size={28} /></div><h2 className="font-display text-2xl font-bold">You’ve reached the edge of the map.</h2><p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">Try opening up your filters, or check back after the evening session lets out.</p><button data-testid="button-reset-discover" onClick={onReset} className="crew-button mt-6 rounded-full bg-sidebar px-5 py-3 text-sm font-bold text-sidebar-foreground">Reset filters</button></div>;
+function EmptyDiscover({ onReset, onRestart, restarting }: { onReset: () => void; onRestart: () => void; restarting: boolean }) {
+  return <div data-testid="empty-discover" className="crew-card flex min-h-[500px] flex-col items-center justify-center rounded-[28px] p-8 text-center"><div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl bg-primary/25 text-primary-foreground"><Compass size={28} /></div><h2 className="font-display text-2xl font-bold">You’ve reached the edge of the map.</h2><p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">You’ve swiped through everyone for these filters. Reset your filters, or start over and see everyone again.</p><div className="mt-6 flex flex-wrap items-center justify-center gap-2"><button data-testid="button-reset-discover" onClick={onReset} className="crew-button rounded-full border border-border bg-card px-5 py-3 text-sm font-bold">Reset filters</button><button data-testid="button-restart-discover" disabled={restarting} onClick={onRestart} className="crew-button rounded-full bg-sidebar px-5 py-3 text-sm font-bold text-sidebar-foreground">{restarting ? 'Starting over…' : 'See everyone again'}</button></div></div>;
 }
 
 function MatchAside() {
@@ -43,3 +114,4 @@ function MatchAside() {
 }
 
 export { Discover, EmptyDiscover, MatchAside };
+

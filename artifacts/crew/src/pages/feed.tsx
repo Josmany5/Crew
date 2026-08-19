@@ -1,6 +1,6 @@
-import { useState } from 'react';
-import { Image as ImageIcon, Loader2, Send, Tag, X } from 'lucide-react';
-import { getGetFeedQueryKey, useCreatePost, useGetDiscoverProfiles, useGetFeed } from '@workspace/api-client-react';
+import { useMemo, useState } from 'react';
+import { Check, Image as ImageIcon, Loader2, Send, Tag, X } from 'lucide-react';
+import { getGetFeedQueryKey, useCreatePost, useGetFeed, useGetPeople } from '@workspace/api-client-react';
 import type { ClimberProfile } from '@workspace/api-client-react';
 import { AppShell } from '@/components/app-shell';
 import { Avatar } from '@/components/avatar';
@@ -16,9 +16,15 @@ function Composer() {
   const [busy, setBusy] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [tagOpen, setTagOpen] = useState(false);
+  const [tagQuery, setTagQuery] = useState('');
   const createPost = useCreatePost();
-  const peopleQuery = useGetDiscoverProfiles();
+  const peopleQuery = useGetPeople();
   const people = peopleQuery.data ?? [];
+  const filteredPeople = useMemo(() => {
+    const q = tagQuery.trim().toLowerCase();
+    return q ? people.filter((p) => p.name.toLowerCase().includes(q) || (p.gyms ?? []).join(' ').toLowerCase().includes(q)) : people;
+  }, [people, tagQuery]);
 
   const uploadPhoto = async (file: File) => {
     setUploading(true);
@@ -54,15 +60,36 @@ function Composer() {
       {imageUrl && <div className="relative mt-2 overflow-hidden rounded-xl bg-muted/30"><img src={imageUrl} alt="" className="max-h-64 w-full object-contain" /><button type="button" aria-label="Remove photo" onClick={() => setImageUrl(null)} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur hover:bg-background"><X size={14} /></button></div>}
       {uploading && <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Loader2 size={13} className="animate-spin" /> Uploading photo…</p>}
       {uploadError && <p className="mt-2 rounded-xl bg-destructive/10 px-3 py-2.5 text-xs font-semibold text-destructive">{uploadError}</p>}
+      {tags.length > 0 && (
+        <div className="mt-3 flex flex-wrap gap-1.5">
+          {tags.map((id) => {
+            const person = people.find((p) => p.id === id);
+            if (!person) return null;
+            return (
+              <span key={id} className="flex items-center gap-1.5 rounded-full border border-primary/40 bg-primary/10 py-1 pl-1 pr-2 text-[11px] font-semibold text-foreground"><Avatar profile={person} size="sm" /> {person.name.split(' ')[0]}<button type="button" aria-label={`Remove tag ${person.name}`} onClick={() => toggleTag(id)} className="text-muted-foreground hover:text-destructive"><X size={11} /></button></span>
+            );
+          })}
+        </div>
+      )}
       <div className="mt-3 flex flex-wrap items-center gap-2">
         <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted"><ImageIcon size={13} /> {uploading ? 'Uploading…' : 'Photo'}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} /></label>
-        <div className="flex flex-wrap items-center gap-1.5">
-          {people.slice(0, 12).map((person: ClimberProfile) => (
-            <button key={person.id} type="button" onClick={() => toggleTag(person.id)} className={`flex items-center gap-1.5 rounded-full border py-1 pl-1 pr-2.5 text-[11px] font-semibold ${tags.includes(person.id) ? 'border-primary bg-primary/15 text-foreground' : 'border-border text-muted-foreground hover:bg-muted'}`}><Avatar profile={person} size="sm" /> {person.name.split(' ')[0]}</button>
-          ))}
-        </div>
+        <button type="button" data-testid="button-tag-people" onClick={() => setTagOpen((v) => !v)} className={`flex items-center gap-1.5 rounded-full border px-3 py-2 text-xs font-bold hover:bg-muted ${tagOpen || tags.length ? 'border-primary/40 bg-primary/10 text-foreground' : 'border-border text-muted-foreground'}`}><Tag size={13} /> Tag climbers{tags.length ? ` (${tags.length})` : ''}</button>
         <button type="button" data-testid="button-post" disabled={busy || (!body.trim() && !imageUrl)} onClick={submit} className="crew-button ml-auto flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-extrabold text-primary-foreground"><Send size={13} /> Post</button>
       </div>
+      {tagOpen && (
+        <div className="mt-3 overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+          <div className="border-b border-border p-3"><input data-testid="input-tag-search" value={tagQuery} onChange={(e) => setTagQuery(e.target.value)} placeholder="Search people by name or gym…" className="w-full rounded-lg border border-input bg-background px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-primary" /></div>
+          <div className="max-h-56 overflow-y-auto p-1.5">
+            {peopleQuery.isLoading ? <p className="p-4 text-sm text-muted-foreground">Loading people…</p> : filteredPeople.length ? filteredPeople.map((person: ClimberProfile) => (
+              <button key={person.id} type="button" onClick={() => toggleTag(person.id)} className="flex w-full items-center gap-2.5 rounded-lg p-2 text-left hover:bg-muted">
+                <Avatar profile={person} size="sm" />
+                <span className="min-w-0 flex-1"><strong className="block truncate text-sm">{person.name}</strong><span className="block truncate text-[11px] text-muted-foreground">{person.gyms.join(' · ') || person.disciplines.join(' · ')}</span></span>
+                {tags.includes(person.id) && <Check className="shrink-0 text-primary" size={16} />}
+              </button>
+            )) : <p className="p-4 text-sm text-muted-foreground">No one matches "{tagQuery}".</p>}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
