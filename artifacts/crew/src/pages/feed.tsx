@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { Image as ImageIcon, Send, Tag, X } from 'lucide-react';
+import { Image as ImageIcon, Loader2, Send, Tag, X } from 'lucide-react';
 import { getGetFeedQueryKey, useCreatePost, useGetDiscoverProfiles, useGetFeed } from '@workspace/api-client-react';
 import type { ClimberProfile } from '@workspace/api-client-react';
 import { AppShell } from '@/components/app-shell';
 import { Avatar } from '@/components/avatar';
 import { PostCard } from '@/components/post-card';
 import { LoadingState, ErrorState, EmptyBlock } from '@/components/state';
-import { supabase } from '@/lib/supabase';
+import { uploadPublicImage } from '@/lib/supabase';
 import { queryClient } from '@/lib/query-client';
 
 function Composer() {
@@ -14,18 +14,23 @@ function Composer() {
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [tags, setTags] = useState<string[]>([]);
   const [busy, setBusy] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
   const createPost = useCreatePost();
   const peopleQuery = useGetDiscoverProfiles();
   const people = peopleQuery.data ?? [];
 
   const uploadPhoto = async (file: File) => {
-    const { data: userData } = await supabase.auth.getUser();
-    const userId = userData.user?.id ?? 'me';
-    const ext = file.name.split('.').pop() ?? 'jpg';
-    const path = `public/${userId}-${Date.now()}.${ext}`;
-    const { error } = await supabase.storage.from('posts').upload(path, file, { upsert: true, contentType: file.type });
-    if (error) return;
-    setImageUrl(supabase.storage.from('posts').getPublicUrl(path).data.publicUrl);
+    setUploading(true);
+    setUploadError('');
+    const url = await uploadPublicImage('posts', file);
+    setUploading(false);
+    if (!url) {
+      setUploadError('Photo upload failed — try again or post without a photo.');
+      setTimeout(() => setUploadError(''), 4000);
+      return;
+    }
+    setImageUrl(url);
   };
 
   const toggleTag = (id: string) => setTags((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
@@ -46,9 +51,11 @@ function Composer() {
     <div className="crew-card rounded-[22px] p-5 md:p-6">
       <p className="font-mono text-[10px] uppercase tracking-widest text-muted-foreground">Share a send, a plan, or a question</p>
       <textarea value={body} onChange={(e) => setBody(e.target.value)} rows={2} placeholder="What's happening in your climbing life?" className="mt-3 w-full resize-none rounded-xl border border-input bg-background px-3 py-3 text-sm outline-none focus:ring-2 focus:ring-primary" />
-      {imageUrl && <img src={imageUrl} alt="" className="mt-2 max-h-56 w-full rounded-xl object-cover" />}
+      {imageUrl && <div className="relative mt-2"><img src={imageUrl} alt="" className="max-h-56 w-full rounded-xl object-cover" /><button type="button" aria-label="Remove photo" onClick={() => setImageUrl(null)} className="absolute right-2 top-2 flex h-7 w-7 items-center justify-center rounded-full bg-background/80 text-foreground backdrop-blur hover:bg-background"><X size={14} /></button></div>}
+      {uploading && <p className="mt-2 flex items-center gap-2 text-xs text-muted-foreground"><Loader2 size={13} className="animate-spin" /> Uploading photo…</p>}
+      {uploadError && <p className="mt-2 rounded-xl bg-destructive/10 px-3 py-2.5 text-xs font-semibold text-destructive">{uploadError}</p>}
       <div className="mt-3 flex flex-wrap items-center gap-2">
-        <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted"><ImageIcon size={13} /> Photo<input type="file" accept="image/*" className="hidden" onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} /></label>
+        <label className="flex cursor-pointer items-center gap-1.5 rounded-full border border-border px-3 py-2 text-xs font-bold text-muted-foreground hover:bg-muted"><ImageIcon size={13} /> {uploading ? 'Uploading…' : 'Photo'}<input type="file" accept="image/*" className="hidden" disabled={uploading} onChange={(e) => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); }} /></label>
         <div className="flex flex-wrap items-center gap-1.5">
           <Tag size={13} className="text-muted-foreground" />
           {people.slice(0, 12).map((person: ClimberProfile) => (
