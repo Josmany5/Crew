@@ -23,4 +23,6 @@ export interface ClimberProfile {
   verified: boolean;
   lastActive?: string;
   climbingLevel?: string;
+  avatarPositionX?: number;
+  avatarPositionY?: number;
 }

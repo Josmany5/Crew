@@ -1,4 +1,7 @@
 import { Router, type IRouter } from "express";
+import multer from "multer";
+import sharp from "sharp";
+import decodeHeic from "heic-decode";
 import { and, desc, eq, or } from "drizzle-orm";
 import {
   checkinsTable,
@@ -50,6 +53,7 @@ import {
   UnmatchResponse,
   UpdateMyProfileBody,
   UpdateMyProfileResponse,
+  UploadImageResponse,
 } from "@workspace/api-zod";
 
 const router: IRouter = Router();
@@ -323,6 +327,67 @@ router.delete("/matches/:matchId", async (req: AuthedRequest, res) => {
   await db().delete(messagesTable).where(eq(messagesTable.conversationId, conversationId));
   await db().delete(conversationsTable).where(eq(conversationsTable.id, conversationId));
   res.json(UnmatchResponse.parse({ ok: true }));
+});
+
+// ---------------------------------------------------------------------------
+// image uploads — server-side processing (HEIC → JPEG, auto-orient, resize)
+// ---------------------------------------------------------------------------
+const upload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 15 * 1024 * 1024 }, // 15 MB
+});
+
+/** True for HEIC/HEIF containers (iPhone photos browsers can't decode). */
+function isHeicBuffer(buffer: Buffer): boolean {
+  if (buffer.length < 12) return false;
+  const brand = buffer.subarray(8, 12).toString("ascii");
+  return ["mif1", "msf1", "heic", "heix", "hevc", "hevx"].includes(brand);
+}
+
+router.post("/uploads", upload.single("file"), async (req: AuthedRequest, res) => {
+  const kind = String(req.body.kind ?? "post");
+  if (kind !== "post" && kind !== "avatar") {
+    res.status(400).json({ error: "kind must be 'post' or 'avatar'" });
+    return;
+  }
+  if (!req.file) {
+    res.status(400).json({ error: "file is required" });
+    return;
+  }
+
+  const bucket = kind === "post" ? "posts" : "avatars";
+  const maxDim = kind === "post" ? 1600 : 800;
+
+  try {
+    let processed: Buffer;
+    if (isHeicBuffer(req.file.buffer)) {
+      // Browsers can't decode HEIC, so transcode via libheif (WASM) first.
+      const { width, height, data } = await decodeHeic({ buffer: req.file.buffer });
+      processed = await sharp(data, { raw: { width, height, channels: 4 } })
+        .resize(maxDim, maxDim, { fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 85, progressive: true })
+        .toBuffer();
+    } else {
+      processed = await sharp(req.file.buffer)
+        .rotate() // apply EXIF orientation
+        .resize(maxDim, maxDim, { fit: "inside", withoutEnlargement: true })
+        .jpeg({ quality: 85, progressive: true })
+        .toBuffer();
+    }
+
+    const path = `public/${req.user!.id}-${Date.now()}.jpg`;
+    const { error } = await supabase()
+      .storage.from(bucket)
+      .upload(path, processed, { contentType: "image/jpeg", cacheControl: "31536000" });
+    if (error) {
+      res.status(500).json({ error: "Could not save image" });
+      return;
+    }
+    const url = supabase().storage.from(bucket).getPublicUrl(path).data.publicUrl;
+    res.json(UploadImageResponse.parse({ url }));
+  } catch (err) {
+    res.status(400).json({ error: "Unsupported or corrupt image" });
+  }
 });
 
 // ---------------------------------------------------------------------------

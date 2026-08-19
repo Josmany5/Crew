@@ -176,6 +176,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Post"
+  /uploads:
+    post:
+      operationId: uploadImage
+      tags: [feed]
+      summary: Upload and process an image (HEIC/JPEG/PNG/WebP → JPEG, auto-oriented, resized)
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/UploadImagePayload"
+      responses:
+        "200":
+          description: Uploaded image URL
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UploadedImage"
   /profiles/{profileId}/posts:
     get:
       operationId: getProfilePosts
@@ -419,6 +437,8 @@ components:
         verified: { type: boolean }
         lastActive: { type: string }
         climbingLevel: { type: string }
+        avatarPositionX: { type: number }
+        avatarPositionY: { type: number }
     ProfileUpdate:
       type: object
       properties:
@@ -442,6 +462,23 @@ components:
           type: array
           items: { type: string }
         climbingLevel: { type: string }
+        avatarPositionX: { type: number }
+        avatarPositionY: { type: number }
+    UploadImagePayload:
+      type: object
+      required: [file]
+      properties:
+        file:
+          type: string
+          format: binary
+        kind:
+          type: string
+          enum: [post, avatar]
+    UploadedImage:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string }
     Gym:
       type: object
       required: [id, name, neighborhood, distance, memberCount, checkedInCount, imageUrl]

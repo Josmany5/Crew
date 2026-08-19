@@ -26,6 +26,8 @@ export interface ClimberProfile {
   verified: boolean;
   lastActive?: string;
   climbingLevel?: string;
+  avatarPositionX?: number;
+  avatarPositionY?: number;
 }
 
 export interface ProfileUpdate {
@@ -41,6 +43,25 @@ export interface ProfileUpdate {
   openToDating?: boolean;
   gear?: string[];
   climbingLevel?: string;
+  avatarPositionX?: number;
+  avatarPositionY?: number;
+}
+
+export type UploadImagePayloadKind = typeof UploadImagePayloadKind[keyof typeof UploadImagePayloadKind];
+
+
+export const UploadImagePayloadKind = {
+  post: 'post',
+  avatar: 'avatar',
+} as const;
+
+export interface UploadImagePayload {
+  file: Blob;
+  kind?: UploadImagePayloadKind;
+}
+
+export interface UploadedImage {
+  url: string;
 }
 
 export interface Gym {

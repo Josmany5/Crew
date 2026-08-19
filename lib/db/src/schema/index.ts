@@ -73,6 +73,8 @@ export const profilesTable = pgTable(
     onboarded: boolean("onboarded").notNull().default(false),
     lastActive: text("last_active").notNull().default("now"),
     climbingLevel: text("climbing_level"),
+    avatarPositionX: integer("avatar_position_x").notNull().default(50),
+    avatarPositionY: integer("avatar_position_y").notNull().default(50),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index("profiles_gyms_idx").on(table.gyms)],

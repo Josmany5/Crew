@@ -41,7 +41,9 @@ export const GetDiscoverProfilesResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })
 export const GetDiscoverProfilesResponse = zod.array(GetDiscoverProfilesResponseItem)
 
@@ -81,7 +83,9 @@ export const GetMyProfileResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })
 
 
@@ -100,7 +104,9 @@ export const UpdateMyProfileBody = zod.object({
   "availability": zod.array(zod.string()).optional(),
   "openToDating": zod.boolean().optional(),
   "gear": zod.array(zod.string()).optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })
 
 export const UpdateMyProfileResponse = zod.object({
@@ -119,7 +125,9 @@ export const UpdateMyProfileResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })
 
 
@@ -160,7 +168,9 @@ export const CreateSwipeResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "matchedAt": zod.string(),
   "unreadCount": zod.number()
@@ -187,7 +197,9 @@ export const GetPendingLikesResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })
 export const GetPendingLikesResponse = zod.array(GetPendingLikesResponseItem)
 
@@ -213,7 +225,9 @@ export const GetFeedResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "body": zod.string().nullish(),
   "imageUrl": zod.string().nullish(),
@@ -235,7 +249,9 @@ export const GetFeedResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })),
   "createdAt": zod.string()
 })
@@ -273,7 +289,9 @@ export const CreatePostResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "body": zod.string().nullish(),
   "imageUrl": zod.string().nullish(),
@@ -295,9 +313,24 @@ export const CreatePostResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })),
   "createdAt": zod.string()
+})
+
+
+/**
+ * @summary Upload and process an image (HEIC/JPEG/PNG/WebP → JPEG, auto-oriented, resized)
+ */
+export const UploadImageBody = zod.object({
+  "file": zod.instanceof(File),
+  "kind": zod.enum(['post', 'avatar']).optional()
+})
+
+export const UploadImageResponse = zod.object({
+  "url": zod.string()
 })
 
 
@@ -326,7 +359,9 @@ export const GetProfilePostsResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "body": zod.string().nullish(),
   "imageUrl": zod.string().nullish(),
@@ -348,7 +383,9 @@ export const GetProfilePostsResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 })),
   "createdAt": zod.string()
 })
@@ -376,7 +413,9 @@ export const GetMatchesResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "matchedAt": zod.string(),
   "unreadCount": zod.number()
@@ -428,7 +467,9 @@ export const GetEventsResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "spots": zod.number(),
   "attendees": zod.number(),
@@ -478,7 +519,9 @@ export const CreateEventResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "spots": zod.number(),
   "attendees": zod.number(),
@@ -519,7 +562,9 @@ export const RsvpToEventResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "spots": zod.number(),
   "attendees": zod.number(),
@@ -567,7 +612,9 @@ export const GetConversationsResponseItem = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "lastMessage": zod.string().nullable(),
   "lastMessageAt": zod.string().nullable(),
@@ -601,7 +648,9 @@ export const CreateConversationResponse = zod.object({
   "gear": zod.array(zod.string()),
   "verified": zod.boolean(),
   "lastActive": zod.string().optional(),
-  "climbingLevel": zod.string().optional()
+  "climbingLevel": zod.string().optional(),
+  "avatarPositionX": zod.number().optional(),
+  "avatarPositionY": zod.number().optional()
 }),
   "lastMessage": zod.string().nullable(),
   "lastMessageAt": zod.string().nullable(),

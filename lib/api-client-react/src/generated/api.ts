@@ -40,7 +40,9 @@ import type {
   ProfileUpdate,
   SwipeInput,
   SwipeResult,
-  Unmatch200
+  Unmatch200,
+  UploadImagePayload,
+  UploadedImage
 } from './api.schemas';
 
 import { customFetch } from '../custom-fetch';
@@ -822,6 +824,82 @@ export const useCreatePost = <TError = ErrorType<unknown>,
         TContext
       > => {
       return useMutation(getCreatePostMutationOptions(options));
+    }
+
+export const getUploadImageUrl = () => {
+
+
+
+
+  return `/api/uploads`
+}
+
+/**
+ * @summary Upload and process an image (HEIC/JPEG/PNG/WebP → JPEG, auto-oriented, resized)
+ */
+export const uploadImage = async (uploadImagePayload: UploadImagePayload, options?: Parameters<typeof customFetch>[1]): Promise<UploadedImage> => {
+    const formData = new FormData();
+formData.append(`file`, uploadImagePayload.file);
+if(uploadImagePayload.kind !== undefined) {
+ formData.append(`kind`, uploadImagePayload.kind);
+ }
+
+  return customFetch<UploadedImage>(getUploadImageUrl(),
+  {
+    ...options,
+    method: 'POST'
+    ,
+    body: formData
+  }
+);}
+
+
+
+
+
+export const getUploadImageMutationOptions = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadImage>>, TError,{data: BodyType<UploadImagePayload>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof uploadImage>>, TError,{data: BodyType<UploadImagePayload>}, TContext> => {
+
+const mutationKey = ['uploadImage'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof uploadImage>>, {data: BodyType<UploadImagePayload>}> = (props) => {
+          const {data} = props ?? {};
+
+          return  uploadImage(data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UploadImageMutationResult = NonNullable<Awaited<ReturnType<typeof uploadImage>>>
+    export type UploadImageMutationBody = BodyType<UploadImagePayload>
+    export type UploadImageMutationError = ErrorType<unknown>
+
+    /**
+ * @summary Upload and process an image (HEIC/JPEG/PNG/WebP → JPEG, auto-oriented, resized)
+ */
+export const useUploadImage = <TError = ErrorType<unknown>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof uploadImage>>, TError,{data: BodyType<UploadImagePayload>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof uploadImage>>,
+        TError,
+        {data: BodyType<UploadImagePayload>},
+        TContext
+      > => {
+      return useMutation(getUploadImageMutationOptions(options));
     }
 
 export const getGetProfilePostsUrl = (profileId: string,) => {

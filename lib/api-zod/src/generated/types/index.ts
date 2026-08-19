@@ -37,3 +37,6 @@ export * from './swipeInput';
 export * from './swipeInputAction';
 export * from './swipeResult';
 export * from './unmatch200';
+export * from './uploadedImage';
+export * from './uploadImagePayload';
+export * from './uploadImagePayloadKind';

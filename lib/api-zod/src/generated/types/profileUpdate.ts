@@ -19,4 +19,6 @@ export interface ProfileUpdate {
   openToDating?: boolean;
   gear?: string[];
   climbingLevel?: string;
+  avatarPositionX?: number;
+  avatarPositionY?: number;
 }

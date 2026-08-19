@@ -30,6 +30,8 @@ async function buildAll() {
     external: [
       "*.node",
       "sharp",
+      "heic-decode",
+      "libheif-js",
       "better-sqlite3",
       "sqlite3",
       "canvas",

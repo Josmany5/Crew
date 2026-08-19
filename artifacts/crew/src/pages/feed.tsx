@@ -23,7 +23,7 @@ function Composer() {
   const uploadPhoto = async (file: File) => {
     setUploading(true);
     setUploadError('');
-    const url = await uploadPublicImage('posts', file);
+    const url = await uploadPublicImage('post', file);
     setUploading(false);
     if (!url) {
       setUploadError('Photo upload failed — try again or post without a photo.');
