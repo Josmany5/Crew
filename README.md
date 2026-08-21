@@ -15,9 +15,15 @@ A community-built climbing app: matching + social events around real places (gym
 | App code organization | ✅ Split into pages/components (Phase 0) |
 | Git + GitHub | ✅ Pushed → **github.com/Josmany5/Crew** |
 | **Real database (Supabase Postgres)** | ✅ **Done — data persists across restarts** |
-| Accounts/auth (sign-up/login) | ⏳ In progress (Phase 5) |
-| Gym/crag place pages + social events | 🗒️ Planned (Phase 2) |
-| Friends + posts, news channels, app stores | 🗒️ Planned (Phases 3–4, then stores) |
+| **Accounts/auth (email sign-up/login)** | ✅ **Done via Supabase Auth** |
+| **Social feed** (posts, photos, captions, tags, check-in auto-posts, delete) | ✅ Done |
+| **Public profiles** (click any name/avatar → their profile + posts) | ✅ Done |
+| **Photo system** (HEIC→JPEG transcoding, drag-to-position avatar crop) | ✅ Done |
+| **Discover** (demo climbers, filters, "see everyone again" reset) | ✅ Done |
+| Gym/crag place pages + social events (Partiful-style) | 🗒️ Planned (Phase 2) |
+| Friends (mutual accept) + request inbox | 🗒️ Planned |
+| Group messages, profile photo albums, achievements | 🗒️ Idea vault |
+| App stores (Expo) | 🗒️ Later |
 
 ---
 
@@ -34,7 +40,7 @@ PORT=5001 BASE_PATH=/ pnpm --filter @workspace/crew run dev
 
 Open **http://localhost:5001**.
 
-> Data lives in **Supabase Postgres** — it persists across server restarts. Accounts/auth is in progress; until it lands, you're the seeded demo user "Sam Rivera."
+> Data lives in **Supabase Postgres** — it persists across server restarts. Real accounts exist via **Supabase Auth** (email sign-up/login); the app also seeds demo climbers (Maya, Jonah, Riley, Diego, Sam) so it's fun to explore before real users join.
 
 ### Useful commands
 
@@ -49,10 +55,11 @@ pnpm --filter @workspace/api-spec run codegen   # regen API types/hooks from ope
 ## Stack & architecture
 
 - pnpm workspaces, Node 24, TypeScript 5.9
-- API: Express 5 (in-memory store for now) — `artifacts/api-server/src/routes/crew.ts`
-- DB: PostgreSQL + Drizzle (`lib/db` — schema placeholder, not wired yet)
+- API: Express 5 — `artifacts/api-server/src/routes/crew.ts` (DB-backed, real persistence)
+- DB: PostgreSQL + Drizzle (`lib/db/src/schema` — real schema: users, profiles, swipes, matches, events, rsvps, conversations, messages, checkins, places, posts)
 - Frontend: Vite + React 19 + Tailwind + react-query, routes via wouter — `artifacts/crew/src`
 - **Spec-first API**: `lib/api-spec/openapi.yaml` → Orval codegen → typed Zod schemas (`lib/api-zod`) + React hooks (`lib/api-client-react`). Change the spec, run codegen.
+- Storage: Supabase Storage (`posts` + `avatars` buckets); uploads are processed server-side (`/api/uploads` — HEIC/HEIF → JPEG, EXIF auto-orient, resize)
 
 ```
 lib/
@@ -78,6 +85,8 @@ artifacts/
 ---
 
 ## Roadmap
+
+> **Status update (2026-08):** Phase 5's core (real DB + Supabase Auth) is done, and the **social feed** shipped ahead of Phase 3: posts (text + photo, HEIC-safe), captions, tags, check-in auto-posts, post deletion, public profiles (`/profile/:id`), a photo system with drag-to-position avatar cropping, and Discover with a "see everyone again" reset. Group messages, photo albums, and achievements remain in the vault below.
 
 ### Phase 0 — Foundation ✅ done
 - Committed the entire app + pushed to GitHub
@@ -170,6 +179,27 @@ Ideas discussed and deferred — kept here so nothing is lost.
 ### Product
 - "Crew-only" audience = matched climbers only
 - Consent-aware matching; optional "open to dating" clearly shown
+
+### Sessions & progression
+- **"Who's climbing tonight?" live board** — cards at the top of the Feed: *"Maya · The Circuit · tonight 6–9 · need a lead partner · 🔴 3 going"* with an **"I'm in"** button → opens a small session chat; notifies people nearby
+- **Rich check-ins** — "Josmany is at PRG now (V5–V6, down to boulder)" with a **"who's here?"** count → tap to join an impromptu session
+- **Send logging + achievements** — tap **"Sent!"** after a session → auto-post *"🔥 Sent V6 at Montavilla"* with a badge; profile gets a **Sends** tab with a grade-over-time chart (DB already reserves `postType: achievement`)
+- **Projects** — set a project (route/problem); Crew surfaces **"2 others are projecting this too"** and matches people projecting the same thing
+
+### Trust & safety
+- **Partner verification** — profile badges: "Lead-checked ✓", "Belay certified", "N years outdoor"; self-declared + vouches, later gym-verified
+- **"Climbed with" references** — after a session, leave a one-line vouch; profiles build a **climbing reputation** ("Climbed with 12")
+- **Safety-first profiles** — risk appetite, indoor/outdoor mix, lead vs top-rope vs boulder shown up front (climbing with strangers needs trust)
+
+### Community & culture
+- **Gym squads** — join your gym's crew; gym page shows "3 crew here right now · 12 regulars · crew night Thursday"; see who's checked in at your gym
+- **The Beta Board** — feed posts can be tagged gym/crag + grade ("V5 · The Circuit"); the Feed filters to "V4–V6 at The Circuit" = instant local beta
+- **Feed prompts** — one-tap posts: "Sent any new grades?", "Climbed with someone?"
+- **Beginner & women's-friendly spaces** — tags/events ("beginner-friendly", "women's night") for adoption & retention
+
+### Quick wins / polish
+- Mobile-first feel (big touch targets, swipeable), PWA so check-in works from the parking lot
+- Session notifications: "Maya is looking for a partner at your gym tonight"
 
 ---
 
